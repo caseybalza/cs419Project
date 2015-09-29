@@ -29,7 +29,7 @@ stdscr3.border(0)
 stdscr3.bkgd(' ', curses.color_pair(1))
 stdscr3.refresh()
 
-stdscr.addstr(31,23, "Created By: Casey Balza, Daryl Cooke, & Nickolas Jurczak", curses.color_pair(2))
+stdscr.addstr(29,23, "Created By: Casey Balza, Daryl Cooke, & Nickolas Jurczak", curses.color_pair(2))
 stdscr.refresh()
 
 stdscr2.addstr(1,1, '"Program Title"')
