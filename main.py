@@ -9,8 +9,8 @@ import MySQLdb
 
 #Connect to MySQL database
 db = MySQLdb.connect(host="localhost",
-                     user="",
-                     passwd="",
+                     user="root",
+                     passwd="password",
                      db="classicmodels")
 
 #Must create cursor object to allow queries from db
