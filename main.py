@@ -44,7 +44,7 @@ stdscr3.bkgd(' ', curses.color_pair(1))
 stdscr3.refresh()
 
 #Create window for outputting MySQL databases.
-stdscr4 = curses.newwin(10, 25, 15, 3)
+stdscr4 = curses.newwin(13, 25, 15, 3)
 stdscr4.border(0)
 stdscr4.bkgd(' ', curses.color_pair(4))
 stdscr4.refresh()
@@ -90,7 +90,6 @@ stdscr4.refresh()
 stdscr5.addstr(1,1, '"classicmodels" tables', curses.A_STANDOUT)
 stdscr5.refresh()
 
-cur.execute("USE classicmodels;")
 cur.execute("SHOW TABLES;")
 i = 3
 for row in cur.fetchall():
