@@ -41,3 +41,53 @@ VM creation is up to you, and no guidelines will be given.
 	• You will need to create a VM for this project. Make sure you can recreate said VM, as you will need
 	  to document this extensively for the final write-up. Scripting said creation in some fashion will likely
 	  make your life much better.
+
+#How to use program
+
+##Libraries needed installed on Virtual Machine
+
+####ncurses - Necessary for visual layout
+##### steps to take installing on linux
+1). Switch to sudo user (su root)
+2). wget http://ftp.gnu.org/gnu/ncurses/ncurses-6.0.tar.gz
+3). tar xzf ncurses-6.0.tar.gz
+4). cd ncurses-6.0
+5). ./configure --prefix=/opt/ncurses
+6). make
+7). make install
+8). ls -la /opt/ncurses
+
+In python import library
+For example: import curses
+
+
+####MySQLdb - Necessary to connect MySQL with Python
+##### steps to take installing on linux
+1). sudo apt-get install python-mysqldb
+
+In python import library
+For example: import MySQLdb
+
+######Connect to MySQL database
+
+db = MySQLdb.connect(host="hostname",
+                     user="username",
+                     passwd="some password",
+                     db="name of database")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
