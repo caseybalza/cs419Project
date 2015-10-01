@@ -12,13 +12,13 @@ import psycopg2
 db = MySQLdb.connect(host="localhost",
                      user="root",
                      passwd="password",
-                     db="classicmodels")
+                     db="")
 
 #Must create cursor object to allow queries from mysql db
 cur = db.cursor()
 
 #Connect to a postgresql database
-pdb = psycopg2.connect("dbname='shakespeare' user='root'")
+pdb = psycopg2.connect("dbname='postgres' user='root'")
 #Must create cursor object to allow queries from postgresql db
 cur2 = pdb.cursor()
 
@@ -96,6 +96,7 @@ stdscr4.refresh()
 stdscr5.addstr(1,1, '"classicmodels" tables', curses.A_STANDOUT)
 stdscr5.refresh()
 
+cur.execute("USE classicmodels;")
 cur.execute("SHOW TABLES;")
 i = 3
 for row in cur.fetchall():
@@ -144,6 +145,13 @@ for row in cur2.fetchall():
 	stdscr4.addstr(i,3, row[0])
 	i += 1
 stdscr4.refresh()
+
+#To use shakespeare db have to reconnect to postgresql with specified db name
+#Connect to a postgresql database
+pdb = psycopg2.connect("dbname='shakespeare' user='root'")
+#Must create cursor object to allow queries from postgresql db
+cur2 = pdb.cursor()
+
 
 stdscr5.addstr(1,2, '"shakespeare" tables', curses.A_STANDOUT)
 stdscr5.refresh()
