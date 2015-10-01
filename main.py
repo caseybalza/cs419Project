@@ -216,9 +216,9 @@ def use_mysql():
 def use_psql():
 
 	#Connect to a postgresql database
-	pdb = psycopg2.connect("dbname='postgres' user='root'")
+	db = psycopg2.connect("dbname='postgres' user='root'")
 	#Must create cursor object to allow queries from postgresql db
-	cur2 = pdb.cursor()
+	cur = db.cursor()
 
 	stdscr.refresh()
 
@@ -243,25 +243,25 @@ def use_psql():
 	stdscr2.addstr(1,3, 'PostgreSQL databases', curses.A_STANDOUT)
 	stdscr2.refresh()
 
-	cur2.execute("SELECT * FROM pg_database")
+	cur.execute("SELECT * FROM pg_database")
 	i = 3
-	for row in cur2.fetchall():
+	for row in cur.fetchall():
 		stdscr2.addstr(i,3, row[0])
 		i += 1
 	stdscr2.refresh()
 
 	#To use shakespeare db have to reconnect to postgresql with specified db name
 	#Connect to a postgresql database
-	pdb = psycopg2.connect("dbname='shakespeare' user='root'")
+	db = psycopg2.connect("dbname='shakespeare' user='root'")
 	#Must create cursor object to allow queries from postgresql db
-	cur2 = pdb.cursor()
+	cur = db.cursor()
 
 	stdscr3.addstr(1,2, '"shakespeare" tables', curses.A_STANDOUT)
 	stdscr3.refresh()
 
-	cur2.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+	cur.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
 	i = 3
-	for row in cur2.fetchall():
+	for row in cur.fetchall():
 		stdscr3.addstr(i,3, row[0])
 		i += 1
 	stdscr3.refresh()
@@ -270,9 +270,9 @@ def use_psql():
 	stdscr4.addstr(2,3, '"from "character"', curses.A_STANDOUT)
 	stdscr4.refresh()
 
-	cur2.execute("SELECT charName FROM character LIMIT 5")
+	cur.execute("SELECT charName FROM character LIMIT 5")
 	i = 3
-	for row in cur2.fetchall():
+	for row in cur.fetchall():
 		stdscr4.addstr(i,1, row[0])
 		i += 1
 	stdscr4.refresh()
