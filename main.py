@@ -6,6 +6,7 @@
 
 import curses
 import MySQLdb
+import psycopg2
 
 #Connect to MySQL database
 db = MySQLdb.connect(host="localhost",
@@ -13,8 +14,13 @@ db = MySQLdb.connect(host="localhost",
                      passwd="password",
                      db="classicmodels")
 
-#Must create cursor object to allow queries from db
+#Must create cursor object to allow queries from mysql db
 cur = db.cursor()
+
+#Connect to a postgresql database
+pdb = psycopg2.connect("dbname='shakespeare' user='root'")
+#Must create cursor object to allow queries from postgresql db
+cur2 = pdb.cursor()
 
 stdscr = curses.initscr() #initialize ncurses
 curses.start_color() #allow colors
@@ -97,8 +103,8 @@ for row in cur.fetchall():
 	i += 1
 stdscr5.refresh()
 
-stdscr6.addstr(1,1, '"customerName" table', curses.A_STANDOUT)
-stdscr6.addstr(2,1, '"from "classicmodels"', curses.A_STANDOUT)
+stdscr6.addstr(1,1, '"customerName"', curses.A_STANDOUT)
+stdscr6.addstr(2,1, '"from "customers"', curses.A_STANDOUT)
 stdscr6.refresh()
 
 cur.execute("SELECT customerName FROM customers ORDER BY customerNumber ASC LIMIT 5")
@@ -108,6 +114,58 @@ for row in cur.fetchall():
 	i += 1
 stdscr6.refresh()
 	
+stdscr.getch()
+
+#Clear the main screen TO TEST POSTGRESQL QUERIES
+stdscr.clear()
+stdscr2.clear()
+stdscr3.clear()
+stdscr4.clear()
+stdscr5.clear()
+stdscr6.clear()
+stdscr.refresh()
+
+stdscr2.addstr(1,1, '"Program Title"')
+stdscr2.addstr(1,19, 'Q', curses.A_UNDERLINE)
+stdscr2.addstr(1,20, 'uit')
+stdscr2.addstr(1,25, 'H', curses.A_UNDERLINE)
+stdscr2.addstr(1,26, 'elp')
+stdscr2.refresh()
+
+stdscr3.addstr(1,7, 'POSTGRESQL STUFF', curses.A_STANDOUT)
+stdscr3.refresh()
+
+stdscr4.addstr(1,3, 'PostgreSQL databases', curses.A_STANDOUT)
+stdscr4.refresh()
+
+cur2.execute("SELECT * FROM pg_database")
+i = 3
+for row in cur2.fetchall():
+	stdscr4.addstr(i,3, row[0])
+	i += 1
+stdscr4.refresh()
+
+stdscr5.addstr(1,2, '"shakespeare" tables', curses.A_STANDOUT)
+stdscr5.refresh()
+
+cur2.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+i = 3
+for row in cur2.fetchall():
+	stdscr5.addstr(i,3, row[0])
+	i += 1
+stdscr5.refresh()
+
+stdscr6.addstr(1,3, '"characterName"', curses.A_STANDOUT)
+stdscr6.addstr(2,3, '"from "character"', curses.A_STANDOUT)
+stdscr6.refresh()
+
+cur2.execute("SELECT charName FROM character LIMIT 5")
+i = 3
+for row in cur2.fetchall():
+	stdscr6.addstr(i,1, row[0])
+	i += 1
+stdscr6.refresh()
+
 stdscr.getch()
 
 #Terminating ncurses application
