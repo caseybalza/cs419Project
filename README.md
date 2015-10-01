@@ -75,7 +75,13 @@ db = MySQLdb.connect(host="hostname",
                      passwd="some password",
                      db="name of database")
 
+####psycopg2 - Necessary to connect to PostgreSQL with python
+##### steps to take installing on linux
+1). sudo apt-get install python-psycopg2
 
+######Connect to PostgreSQL database
+
+pdb = psycopg2.connect("dbname='Name of db' user='Name of user'")
 
 
 
