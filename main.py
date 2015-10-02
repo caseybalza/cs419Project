@@ -7,6 +7,7 @@
 import curses
 import MySQLdb
 import psycopg2
+import os
 
 stdscr = curses.initscr() #initialize ncurses
 curses.noecho() # Disables automatic echoing of key presses (prevents program from input each key twice)
@@ -51,7 +52,7 @@ main_menu = {
 
 
 # This function displays the appropriate menu and returns the option selected
-def runmenu(menu, parent):
+def runmenu(menu, parent, start):
 
 	# work out what text to display as the last menu option
 	if parent is None:
@@ -75,38 +76,51 @@ def runmenu(menu, parent):
 			stdscr.addstr(28,23, "Created By: Casey Balza, Daryl Cooke, & Nickolas Jurczak", curses.color_pair(2))
 
 			# Display all the menu items, showing the 'pos' item highlighted
+			count = 0
 			for index in range(optioncount):
+				index += start
 				textstyle = n
 
-				if pos==index:
+				if pos==count:
 					textstyle = h
-				stdscr.addstr(5+index,20, "%d - %s" % (index+1, menu['options'][index]['title']), textstyle)
+				if count < 7 and index < optioncount:
+					stdscr.addstr(5+count,20, "%d - %s" % (count+1, menu['options'][index]['title']), textstyle)
+					count += 1
+
+				elif count == 7:
+					stdscr.addstr(5+count,20, "%d - %s" % (count+1, "MORE"), textstyle)				
+					count += 1
 
 			# Now display Exit/Return at bottom of menu
 			textstyle = n
 
-			if pos==optioncount:
+			if pos==count:
 				textstyle = h
-
-			stdscr.addstr(5+optioncount,20, "%d - %s" % (optioncount+1, lastoption), textstyle)
+			stdscr.addstr(5+count,20, "%d - %s" % (count+1, lastoption), textstyle)
 			stdscr.refresh()
 			# finished updating screen
 
 		x = stdscr.getch() # Gets user input
 
 		# What is user input?
-		if x >= ord('1') and x <= ord(str(optioncount+1)):
+		max = 0
+		if optioncount <= 8:
+			max = ord(str(optioncount+1))
+		else:
+			max = ord('9')
+		if x >= ord('1') and x <= max:
 			pos = x - ord('0') - 1 # convert keypress back to a number, then subtract 1 to get index
 		elif x == 258: # down arrow
-			if pos < optioncount:
+			if pos < count:
 				pos += 1
 			else: pos = 0
 		elif x == 259: # up arrow
 			if pos > 0:
 				pos += -1
-			else: pos = optioncount
-
+			else: pos = count
 	# return index of the selected item
+	if pos < 7:
+		pos += start
 	return pos
 #end runmenu()
 
@@ -114,10 +128,14 @@ def runmenu(menu, parent):
 def processmenu(menu, parent=None):
 	optioncount = len(menu['options'])
 	exitmenu = False
+	start = 0
 	while not exitmenu: #Loop until the user exits the menu
-		getin = runmenu(menu, parent)
-		if getin == optioncount:
+		getin = runmenu(menu, parent, start)
+		if getin == 8 or getin == optioncount:
 			exitmenu = True
+		elif getin == 7:
+			start += 7
+			stdscr.clear()
 		elif menu['options'][getin]['type'] == COMMAND:
 			curses.def_prog_mode()    # save curent curses environment
 			stdscr.clear() #clears previous screen
@@ -145,6 +163,32 @@ def testfun():
 	stdscr.getch()
 #end testfun()
 
+#Show tables from selected database
+def show_tables(dbs):
+
+	#Connect to MySQL database
+	db = MySQLdb.connect(host="localhost",
+				user="root",
+				passwd="password",
+				db="")
+
+	#Must create cursor object to allow queries from msql db
+	cur = db.cursor()
+
+	mysql_dbs_menu = {
+		'title': dbs+" tables",'type': MENU,'subtitle': "Please select a table or action...",
+		'options':[]#end of menu options
+	}#end of menu data
+
+	cur.execute(os.path.join("USE "+dbs+";"))
+	cur.execute("SHOW TABLES;")
+	mysql_dbs_menu['options'].append({'title': "CUSTOM QUERY",'type': COMMAND,'command': 'testfun()' })	
+	for row in cur.fetchall():
+		mysql_dbs_menu['options'].append({'title': row[0],'type': COMMAND, 'command': 'testfun()' })
+	processmenu(mysql_dbs_menu, main_menu)
+
+#end show_tables(dbs)
+
 #Displays information from MySQL server
 def use_mysql():
 
@@ -157,7 +201,17 @@ def use_mysql():
 	#Must create cursor object to allow queries from mysql db
 	cur = db.cursor()
 
-	stdscr.refresh()
+	mysql_menu = {
+		'title': "MySql databases", 'type': MENU, 'subtitle': "Please select a database to use...",
+		'options':[]#end of menu options
+	}#end of menu data
+
+	cur.execute("SHOW DATABASES;")
+	for row in cur.fetchall():
+		action = os.path.join('show_tables(\"'+row[0]+'\")')
+		mysql_menu['options'].append({'title': row[0], 'type': COMMAND, 'command':action })
+	processmenu(mysql_menu, main_menu)
+	"""stdscr.refresh()
 
 	#Create window for outputting MySQL databases.
 	stdscr2 = curses.newwin(13, 25, 15, 3)
@@ -210,13 +264,13 @@ def use_mysql():
 		i += 1
 	stdscr4.refresh()
 	
-	stdscr.getch()
+	stdscr.getch()"""
 #end use_mysql()
 
 def use_psql():
 
 	#Connect to a postgresql database
-	db = psycopg2.connect("dbname='postgres' user='root'")
+	db = psycopg2.connect("dbname='postgres' user='ubuntu'")
 	#Must create cursor object to allow queries from postgresql db
 	cur = db.cursor()
 
@@ -252,7 +306,7 @@ def use_psql():
 
 	#To use shakespeare db have to reconnect to postgresql with specified db name
 	#Connect to a postgresql database
-	db = psycopg2.connect("dbname='shakespeare' user='root'")
+	db = psycopg2.connect("dbname='shakespeare' user='ubuntu'")
 	#Must create cursor object to allow queries from postgresql db
 	cur = db.cursor()
 
