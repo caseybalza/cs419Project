@@ -270,7 +270,7 @@ def use_mysql():
 def use_psql():
 
 	#Connect to a postgresql database
-	db = psycopg2.connect("dbname='postgres' user='ubuntu'")
+	db = psycopg2.connect("dbname='postgres' user='root'")
 	#Must create cursor object to allow queries from postgresql db
 	cur = db.cursor()
 
@@ -306,7 +306,7 @@ def use_psql():
 
 	#To use shakespeare db have to reconnect to postgresql with specified db name
 	#Connect to a postgresql database
-	db = psycopg2.connect("dbname='shakespeare' user='ubuntu'")
+	db = psycopg2.connect("dbname='shakespeare' user='root'")
 	#Must create cursor object to allow queries from postgresql db
 	cur = db.cursor()
 
