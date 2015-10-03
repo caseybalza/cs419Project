@@ -119,9 +119,13 @@ def runmenu(menu, parent, start):
 				pos += -1
 			else: pos = count
 	# return index of the selected item
-	if pos < 7:
+	if pos == 8 or pos == optioncount:
+		return -1
+	elif pos == 7:
+		return -2
+	else:
 		pos += start
-	return pos
+		return pos
 #end runmenu()
 
 # This function calls showmenu and then acts on the selected item
@@ -131,9 +135,9 @@ def processmenu(menu, parent=None):
 	start = 0
 	while not exitmenu: #Loop until the user exits the menu
 		getin = runmenu(menu, parent, start)
-		if getin == 8 or getin == optioncount:
+		if getin == -1 or getin == optioncount:
 			exitmenu = True
-		elif getin == 7:
+		elif getin == -2:
 			start += 7
 			stdscr.clear()
 		elif menu['options'][getin]['type'] == COMMAND:
@@ -270,7 +274,7 @@ def use_mysql():
 def use_psql():
 
 	#Connect to a postgresql database
-	db = psycopg2.connect("dbname='postgres' user='root'")
+	db = psycopg2.connect("dbname='postgres' user='ubuntu'")
 	#Must create cursor object to allow queries from postgresql db
 	cur = db.cursor()
 
@@ -306,7 +310,7 @@ def use_psql():
 
 	#To use shakespeare db have to reconnect to postgresql with specified db name
 	#Connect to a postgresql database
-	db = psycopg2.connect("dbname='shakespeare' user='root'")
+	db = psycopg2.connect("dbname='shakespeare' user='ubuntu'")
 	#Must create cursor object to allow queries from postgresql db
 	cur = db.cursor()
 
