@@ -8,6 +8,7 @@ import curses
 import MySQLdb
 import psycopg2
 import os
+from utils.mySQLDatabaseOrchestrator import MySQLDatabaseOrchestrator
 
 stdscr = curses.initscr() #initialize ncurses
 curses.noecho() # Disables automatic echoing of key presses (prevents program from input each key twice)
@@ -167,57 +168,56 @@ def testfun():
 	stdscr.getch()
 #end testfun()
 
-#Show tables from selected database
+def show_table_contents(table):
+        tableContents = mySQL_DB_Orchestrator.get_table_for_viewing(table)
+        stdscr.clear()
+        stdscr.refresh()
+        schemaRow = curses.newwin(5, columns, 0, 0)
+        width = columns // 5
+        rowFormat = "%-{}s %-{}s %-{}s %-{}s %-{}s".format(width, width, width, width, width)
+        schemaRow.addstr(1, 1, rowFormat % (tableContents[0][0][0], tableContents[0][1][0], tableContents[0][2][0], tableContents[0][3][0], tableContents[0][4][0]))
+        schemaRow.refresh()
+
+        for x in range(1, 20):
+            itemRow = curses.newwin(3, columns, 5 + ((x - 1) * 2), 0)
+            itemRow.addstr(1, 1, rowFormat % (tableContents[1][x][0], tableContents[1][x][1], tableContents[1][x][2], tableContents[1][x][3], tableContents[1][x][4]))
+            itemRow.refresh()
+
+        #Put column names in first column
+        stdscr.getch()
+
 def show_tables(dbs):
+        mySQL_DB_Orchestrator.select_database(dbs)
 
-	#Connect to MySQL database
-	db = MySQLdb.connect(host="localhost",
-				user="root",
-				passwd="password",
-				db="")
+        mysql_dbs_menu = {
+                'title': dbs + " tables", 'type': MENU, 'subtitle': "Please select a table or action...",
+                'options':[]#end of menu options
+        }#end of menu data
 
-	#Must create cursor object to allow queries from msql db
-	cur = db.cursor()
+        tables = mySQL_DB_Orchestrator.show_tables()
 
-	mysql_dbs_menu = {
-		'title': dbs+" tables",'type': MENU,'subtitle': "Please select a table or action...",
-		'options':[]#end of menu options
-	}#end of menu data
-
-	cur.execute(os.path.join("USE "+dbs+";"))
-	cur.execute("SHOW TABLES;")
-	mysql_dbs_menu['options'].append({'title': "CUSTOM QUERY",'type': COMMAND,'command': 'testfun()' })	
-	for row in cur.fetchall():
-		mysql_dbs_menu['options'].append({'title': row[0],'type': COMMAND, 'command': 'testfun()' })
-	processmenu(mysql_dbs_menu, main_menu)
-
+        mysql_dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': COMMAND, 'command': 'testfun()' })
+        for table in tables:
+                action = os.path.join('show_table_contents(\"' + table + '\")')
+                mysql_dbs_menu['options'].append({'title': table, 'type': COMMAND, 'command': action })
+        processmenu(mysql_dbs_menu, main_menu)
 #end show_tables(dbs)
 
 #Displays information from MySQL server
 def use_mysql():
-
-	#Connect to MySQL database
-	db = MySQLdb.connect(host="localhost",
-                     user="root",
-                     passwd="password",
-                     db="")
-
-	#Must create cursor object to allow queries from mysql db
-	cur = db.cursor()
-
 	mysql_menu = {
 		'title': "MySql databases", 'type': MENU, 'subtitle': "Please select a database to use...",
 		'options':[]#end of menu options
 	}#end of menu data
 
-	cur.execute("SHOW DATABASES;")
-	for row in cur.fetchall():
-		action = os.path.join('show_tables(\"'+row[0]+'\")')
-		mysql_menu['options'].append({'title': row[0], 'type': COMMAND, 'command':action })
-	processmenu(mysql_menu, main_menu)
-	"""stdscr.refresh()
+        databases = mySQL_DB_Orchestrator.show_databases()
+        for database in databases:
+            action = os.path.join('show_tables(\"' + database + '\")')
+            mysql_menu['options'].append({'title': database, 'type': COMMAND, 'command': action })
+        processmenu(mysql_menu, main_menu)
 
-	#Create window for outputting MySQL databases.
+        """stdscr.refresh()
+        #Create window for outputting MySQL databases.
 	stdscr2 = curses.newwin(13, 25, 15, 3)
 	stdscr2.border(0)
 	stdscr2.bkgd(' ', curses.color_pair(2))
@@ -339,6 +339,10 @@ def use_psql():
 #end use_psql()
 
 #MAIN PROGRAM
+mySQL_DB_Orchestrator = MySQLDatabaseOrchestrator("localhost", "root", "password", "")
+rows, columns = os.popen('stty size', 'r').read().split()
+rows = int(rows)
+columns = int(columns)
 processmenu(main_menu)
 
 curses.endwin() #Terminating ncurses application
