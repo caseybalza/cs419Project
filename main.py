@@ -8,12 +8,10 @@ import curses
 import MySQLdb
 import psycopg2
 import os
-from utils.DatabaseOrchestrator import DatabaseOrchestrator
 import subprocess
 import sys
 import time
-from utils.mySQLDatabaseOrchestrator import MySQLDatabaseOrchestrator
-
+from utils.DatabaseOrchestrator import DatabaseOrchestrator
 
 #ANSI escape sequence colors for changing text color without using curses
 #source: stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
@@ -354,7 +352,7 @@ def use_mysql():
 def use_psql():
 
 	#Connect to a postgresql database
-	db = psycopg2.connect("dbname='postgres' user='ubuntu'")
+	db = psycopg2.connect("dbname='postgres' user='root'")
 	#Must create cursor object to allow queries from postgresql db
 	cur = db.cursor()
 
@@ -374,7 +372,7 @@ def use_psql():
 
 if stop == 0:
 	mySQL_DB_Orchestrator = DatabaseOrchestrator("localhost", "root", "password", "", "MySQL")
-	postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "ubuntu", "", "postgres", "PostgresSQL")
+	postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "root", "", "postgres", "PostgresSQL")
 	rows, columns = os.popen('stty size', 'r').read().split()
 	rows = int(rows)
 	columns = int(columns)
