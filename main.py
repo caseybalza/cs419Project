@@ -349,12 +349,6 @@ def use_mysql():
 #end use_mysql()
 
 def use_psql():
-
-	#Connect to a postgresql database
-	db = psycopg2.connect("dbname='postgres' user='root'")
-	#Must create cursor object to allow queries from postgresql db
-	cur = db.cursor()
-
         postgressql_menu = {
                 'title': "PostgresSQL databases", 'type': MENU, 'subtitle': "Please select a database to use...",
                 'options':[]#end of menu options
@@ -371,7 +365,7 @@ def use_psql():
 
 if stop == 0:
 	mySQL_DB_Orchestrator = DatabaseOrchestrator("localhost", "root", "password", "", "MySQL")
-	postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "root", "", "postgres", "PostgresSQL")
+	postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "ubuntu", "", "postgres", "PostgresSQL")
 	rows, columns = os.popen('stty size', 'r').read().split()
 	rows = int(rows)
 	columns = int(columns)
