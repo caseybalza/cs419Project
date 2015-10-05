@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -56,3 +57,6 @@ docs/_build/
 
 # PyBuilder
 target/
+=======
+s
+>>>>>>> 641338a... Completed versionCheck
