@@ -90,8 +90,7 @@ def versionCheck():
 		time.sleep(0.5)
 
 	#Check python modules
-	check_these_modules = [["curses", "MySQLdb", "psycopg2"],["2.2", "1.2.3", "2.4.5 (dt dec mx pq3 ext)"]]
-
+	check_these_modules = [["curses", "MySQLdb", "psycopg2"],["2.2", "1.2.3", "2.5.3 (dt dec mx pq3 ext)"]]
 	for i in range(0, len(check_these_modules[0])):
 		j = 1 #used for indexing in 2-D array
 
