@@ -16,9 +16,9 @@ from utils.DatabaseOrchestrator import DatabaseOrchestrator
 #ANSI escape sequence colors for changing text color without using curses
 #source: stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
 class terminalColors:
-	SUCCESS = '\033[92m'
-	FAIL = '\033[91m'
-	ENDC = '\033[0m'
+	SUCCESS = '\33[1m\33[32m'
+	FAIL = '\33[1m\33[31m'
+	ENDC = '\33[0m'
 
 #Checks if applications are/or installed and are of correct version.
 #Sources used:
