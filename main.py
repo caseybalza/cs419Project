@@ -8,7 +8,130 @@ import curses
 import MySQLdb
 import psycopg2
 import os
-from utils.mySQLDatabaseOrchestrator import MySQLDatabaseOrchestrator
+import subprocess
+import sys
+import time
+from utils.DatabaseOrchestrator import DatabaseOrchestrator
+
+#ANSI escape sequence colors for changing text color without using curses
+#source: stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
+class terminalColors:
+	SUCCESS = '\33[1m\33[32m'
+	FAIL = '\33[1m\33[31m'
+	ENDC = '\33[0m'
+
+#Checks if applications are/or installed and are of correct version.
+#Sources used:
+#stackoverflow.com/questions/5847934/how-to-check-if-python-module-exists-and-can-be-imported
+#stackoverflow.com/questions/710609/checking-a-python-module-version-at-runtime
+#stackoverflow.com/questions/11269575/how-to-hide-output-of-subprocess-in-python-2-7
+def versionCheck():
+	stop = 0 #Used to determine if there was a failure, if so halt program.
+
+	#Check to see if required programs are and installed and have correct version.
+	check_these_programs = [["python", "mysql", "psql"], ["2.7", "14", "9"]]
+	
+	for i in range(0, len(check_these_programs[0])):
+		j = 1 #used for indexing in 2-D array
+		
+		#Used to redirect output from subprocess to devnull (don't want it printed to screen), closes after subprocess 			 finishes.
+		fnull = open(os.devnull, 'w')
+		try:
+			subprocess.call([check_these_programs[0][i], "--version"], stdout = fnull, 
+																	   stderr=subprocess.STDOUT,
+																	   close_fds=True)
+		except:#Means program is not installed
+			stop = 1 #Failure do not continue with program
+			result = terminalColors.FAIL + "FAILED" + terminalColors.ENDC
+			print check_these_programs[0][i] + " version " + check_these_programs[j][i] + " - " + result
+			continue #Skip to next iteration
+		else:#Program is installed now need to check versions
+			if check_these_programs[0][i] == "python":
+				major = sys.version_info.major
+				minor = sys.version_info.minor
+				if major == 2 and minor == 7:
+					result = terminalColors.SUCCESS + "SUCCESS" + terminalColors.ENDC
+				else:
+					result = terminalColors.FAIL + "FAILED wrong version" + terminalColors.ENDC
+					stop = 1 #Failure do not continue with program
+			
+			elif check_these_programs[0][i] == "psql":
+				proc = subprocess.Popen(["psql", "--version"], stdout=subprocess.PIPE)
+				ver = proc.communicate()[0]
+				
+				#parse output of psql --version to get major version number
+				ver = ver.split(" ",4)
+				ver = ver[2].split(".", 1)
+				ver = ver[0]
+				
+				if ver == check_these_programs[1][2]:
+					result = terminalColors.SUCCESS + "SUCCESS" + terminalColors.ENDC
+				else:
+					result = terminalColors.FAIL + "FAILED wrong version" + terminalColors.ENDC
+					stop = 1 #Failure do not continue with program
+
+			elif check_these_programs[0][i] == "mysql":
+				proc = subprocess.Popen(["mysql", "--version"], stdout=subprocess.PIPE)
+				ver = proc.communicate()[0]
+				
+				#parse output of psql --version to get major version number
+				ver = ver.split(" ",3)
+				ver = ver[3].split(".", 1)
+				ver = ver[0]
+				
+				if ver == check_these_programs[1][1]:
+					result = terminalColors.SUCCESS + "SUCCESS" + terminalColors.ENDC
+				else:
+					result = terminalColors.FAIL + "FAILED wrong version" + terminalColors.ENDC
+					stop = 1 #Failure do not continue with program
+
+
+		print check_these_programs[0][i] + " version " + check_these_programs[j][i] + ".* - " + result
+		time.sleep(0.5)
+
+	#Check python modules
+	check_these_modules = [["curses", "MySQLdb", "psycopg2"],["2.2", "1.2.3", "2.5.3 (dt dec mx pq3 ext)"]]
+	for i in range(0, len(check_these_modules[0])):
+		j = 1 #used for indexing in 2-D array
+
+		try:
+			__import__(check_these_modules[0][i]) #Checking modules are installed.
+		except ImportError:
+			stop = 1 #Failure do not continue with program
+			result = terminalColors.FAIL + "FAILED" + terminalColors.ENDC
+			print check_these_modules[0][i] + " version " + check_these_modules[j][i] + " - " + result
+			continue #Skip to next iteration
+		else:#Is installed, but need to check for correct version.
+			if check_these_modules[0][i] == "curses":#curses uses different syntax to check for version
+				ver = curses.version
+			else:
+				ver = eval(check_these_modules[0][i] + '.__version__')
+
+			if check_these_modules[j][i] == ver:
+				result = terminalColors.SUCCESS + "SUCCESS" + terminalColors.ENDC
+			else:
+				result = terminalColors.FAIL + "FAILED" + terminalColors.ENDC
+				stop = 1 #Failure do not continue with program
+
+			print check_these_modules[0][i] + " version " + check_these_modules[j][i] + " - " + result
+			time.sleep(0.5)
+		
+		j += 1
+
+	
+	if stop == 1:
+		print terminalColors.FAIL + "ALERT" + terminalColors.ENDC
+		print "One or more items is either not installed or is the incorrect version"
+		print "Now exiting"
+	else:
+		print "Thank you for your patience, now opening program..."
+
+	time.sleep(5)
+
+	return(stop)
+#end versionCheck()
+
+stop = versionCheck()#If everything needed is installed and correct version continue with program, else halt.
 
 stdscr = curses.initscr() #initialize ncurses
 curses.noecho() # Disables automatic echoing of key presses (prevents program from input each key twice)
@@ -23,7 +146,18 @@ curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_CYAN)
 curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
 curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)
 curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
+	
+#clears screen and outputs exit menu
+def exit_window(new_menu, old_menu):
+	stdscr.clear
+	processmenu(new_menu, old_menu)
+#end exit_window
 
+#closes program
+def exit_program():
+	curses.endwin() #Terminating ncurses application
+	sys.exit()
+#end exit_program()
 
 ######################## MENU FUNCTIONS #######################################################
 # Source to help create menus http://blog.skeltonnetworks.com/2010/03/python-curses-custom-menu/
@@ -51,13 +185,21 @@ main_menu = {
   ]#end of menu options
 }#end of menu data
 
+exit_menu = {
+	'title': "Exit program?", 'type': MENU, 'subtitle': "Please select an action...",
+	'options':[
+  		{ 'title': "Yes", 'type': COMMAND, 'command': 'exit_program()' },
+  ]#end of exit_menu options
+}#end of exit_menu data
 
 # This function displays the appropriate menu and returns the option selected
 def runmenu(menu, parent, start):
 
 	# work out what text to display as the last menu option
 	if parent is None:
-		lastoption = "Exit"
+		lastoption = 0 #display no lastoption
+	elif parent == "No":
+		lastoption = "No"
 	else:
 		lastoption = "Return to %s" % parent['title']
 
@@ -92,14 +234,16 @@ def runmenu(menu, parent, start):
 					stdscr.addstr(5+count,20, "%d - %s" % (count+1, "MORE"), textstyle)				
 					count += 1
 
+			
 			# Now display Exit/Return at bottom of menu
-			textstyle = n
+			if lastoption != 0:
+				textstyle = n
 
-			if pos==count:
-				textstyle = h
-			stdscr.addstr(5+count,20, "%d - %s" % (count+1, lastoption), textstyle)
-			stdscr.refresh()
-			# finished updating screen
+				if pos==count:
+					textstyle = h
+				stdscr.addstr(5+count,20, "%d - %s" % (count+1, lastoption), textstyle)
+				stdscr.refresh()
+				# finished updating screen
 
 		x = stdscr.getch() # Gets user input
 
@@ -119,6 +263,9 @@ def runmenu(menu, parent, start):
 			if pos > 0:
 				pos += -1
 			else: pos = count
+		elif x == 69: # if user entered 'E' (shift + e) from the .getch()
+			pos = 69
+			return pos
 	# return index of the selected item
 	if pos == 8 or pos == optioncount:
 		return -1
@@ -126,6 +273,7 @@ def runmenu(menu, parent, start):
 		return -2
 	else:
 		pos += start
+
 		return pos
 #end runmenu()
 
@@ -138,6 +286,11 @@ def processmenu(menu, parent=None):
 		getin = runmenu(menu, parent, start)
 		if getin == -1 or getin == optioncount:
 			exitmenu = True
+		elif getin == 69: #if user input 'E' (shift + e) bring up exit menu
+			stdscr.clear()
+			saying = "No"
+			exit_window(exit_menu, saying) #open exit window
+			stdscr.clear()#Clear screen of exit menu if user did not exit
 		elif getin == -2:
 			start += 7
 			stdscr.clear()
@@ -158,6 +311,7 @@ def processmenu(menu, parent=None):
 		  	exitmenu = True
 #end processmenu()
 
+
 ################### END OF MENU FUNCTIONS #######################################################
 
 #Test function
@@ -168,8 +322,11 @@ def testfun():
 	stdscr.getch()
 #end testfun()
 
-def show_table_contents(table):
-        tableContents = mySQL_DB_Orchestrator.get_table_for_viewing(table)
+def show_table_contents(table, databaseType):
+        if databaseType == "MySQL":
+            tableContents = mySQL_DB_Orchestrator.get_table_for_viewing(table)
+        if databaseType == "PostgresSQL":
+            tableContents = postgresSQL_DB_Orchestrator.get_table_for_viewing(table)
         stdscr.clear()
         stdscr.refresh()
         schemaRow = curses.newwin(5, columns, 0, 0)
@@ -186,21 +343,27 @@ def show_table_contents(table):
         #Put column names in first column
         stdscr.getch()
 
-def show_tables(dbs):
-        mySQL_DB_Orchestrator.select_database(dbs)
+def show_tables(dbs, databaseType):
+        if databaseType == "MySQL":
+            mySQL_DB_Orchestrator.select_database(dbs)
+        if databaseType == "PostgresSQL":
+            postgresSQL_DB_Orchestrator.select_database(dbs)
 
-        mysql_dbs_menu = {
+        dbs_menu = {
                 'title': dbs + " tables", 'type': MENU, 'subtitle': "Please select a table or action...",
                 'options':[]#end of menu options
         }#end of menu data
 
-        tables = mySQL_DB_Orchestrator.show_tables()
+        if databaseType == "MySQL":
+            tables = mySQL_DB_Orchestrator.show_tables()
+        if databaseType == "PostgresSQL":
+            tables = postgresSQL_DB_Orchestrator.show_tables()
 
-        mysql_dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': COMMAND, 'command': 'testfun()' })
+        dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': COMMAND, 'command': 'testfun()' })
         for table in tables:
-                action = os.path.join('show_table_contents(\"' + table + '\")')
-                mysql_dbs_menu['options'].append({'title': table, 'type': COMMAND, 'command': action })
-        processmenu(mysql_dbs_menu, main_menu)
+                action = os.path.join('show_table_contents(\"{}\", \"{}\")'.format(table, databaseType))
+                dbs_menu['options'].append({'title': table, 'type': COMMAND, 'command': action })
+        processmenu(dbs_menu, main_menu)
 #end show_tables(dbs)
 
 #Displays information from MySQL server
@@ -212,139 +375,33 @@ def use_mysql():
 
         databases = mySQL_DB_Orchestrator.show_databases()
         for database in databases:
-            action = os.path.join('show_tables(\"' + database + '\")')
+            action = os.path.join('show_tables(\"{}\", \"{}\")'.format(database, "MySQL"))
             mysql_menu['options'].append({'title': database, 'type': COMMAND, 'command': action })
         processmenu(mysql_menu, main_menu)
-
-        """stdscr.refresh()
-        #Create window for outputting MySQL databases.
-	stdscr2 = curses.newwin(13, 25, 15, 3)
-	stdscr2.border(0)
-	stdscr2.bkgd(' ', curses.color_pair(2))
-	stdscr2.refresh()
-	
-	#Create window for outputting MySQL db classicmodels Tables.
-	stdscr3 = curses.newwin(13, 24, 15, 29)
-	stdscr3.border(0)
-	stdscr3.bkgd(' ', curses.color_pair(5))
-	stdscr3.refresh()
-	
-	#Create window for outputting MySQL db classicmodels customerName Table.
-	stdscr4 = curses.newwin(13, 24, 15, 54)
-	stdscr4.border(0)
-	stdscr4.bkgd(' ', curses.color_pair(6))
-	stdscr4.refresh()
-
-	#Output to windows
-	stdscr2.addstr(1,5, 'MySQL databases', curses.A_STANDOUT)
-	stdscr2.refresh()
-	
-	cur.execute("SHOW DATABASES;")
-	i = 3
-	for row in cur.fetchall():
-		stdscr2.addstr(i,3, row[0])
-		i += 1
-	stdscr2.refresh()
-
-	stdscr3.addstr(1,1, '"classicmodels" tables', curses.A_STANDOUT)
-	stdscr3.refresh()
-
-	cur.execute("USE classicmodels;")
-	cur.execute("SHOW TABLES;")
-	i = 3
-	for row in cur.fetchall():
-		stdscr3.addstr(i,3, row[0])
-		i += 1
-	stdscr3.refresh()
-
-	stdscr4.addstr(1,1, '"customerName"', curses.A_STANDOUT)
-	stdscr4.addstr(2,1, '"from "customers"', curses.A_STANDOUT)
-	stdscr4.refresh()
-
-	cur.execute("SELECT customerName FROM customers ORDER BY customerNumber ASC LIMIT 5")
-	i = 3
-	for row in cur.fetchall():
-		stdscr4.addstr(i,1, row[0])
-		i += 1
-	stdscr4.refresh()
-	
-	stdscr.getch()"""
 #end use_mysql()
 
 def use_psql():
+        postgressql_menu = {
+                'title': "PostgresSQL databases", 'type': MENU, 'subtitle': "Please select a database to use...",
+                'options':[]#end of menu options
+        }#end of menu data
 
-	#Connect to a postgresql database
-	db = psycopg2.connect("dbname='postgres' user='ubuntu'")
-	#Must create cursor object to allow queries from postgresql db
-	cur = db.cursor()
-
-	stdscr.refresh()
-
-	#Create window for outputting PosegreSQL databases.
-	stdscr2 = curses.newwin(13, 25, 15, 3)
-	stdscr2.border(0)
-	stdscr2.bkgd(' ', curses.color_pair(2))
-	stdscr2.refresh()
-	
-	#Create window for outputting PostgreSQL db shakespeare Tables.
-	stdscr3 = curses.newwin(13, 24, 15, 29)
-	stdscr3.border(0)
-	stdscr3.bkgd(' ', curses.color_pair(5))
-	stdscr3.refresh()
-	
-	#Create window for outputting PostgreSQL db shakespeare characterName Table.
-	stdscr4 = curses.newwin(13, 24, 15, 54)
-	stdscr4.border(0)
-	stdscr4.bkgd(' ', curses.color_pair(6))
-	stdscr4.refresh()
-
-	stdscr2.addstr(1,3, 'PostgreSQL databases', curses.A_STANDOUT)
-	stdscr2.refresh()
-
-	cur.execute("SELECT * FROM pg_database")
-	i = 3
-	for row in cur.fetchall():
-		stdscr2.addstr(i,3, row[0])
-		i += 1
-	stdscr2.refresh()
-
-	#To use shakespeare db have to reconnect to postgresql with specified db name
-	#Connect to a postgresql database
-	db = psycopg2.connect("dbname='shakespeare' user='ubuntu'")
-	#Must create cursor object to allow queries from postgresql db
-	cur = db.cursor()
-
-	stdscr3.addstr(1,2, '"shakespeare" tables', curses.A_STANDOUT)
-	stdscr3.refresh()
-
-	cur.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
-	i = 3
-	for row in cur.fetchall():
-		stdscr3.addstr(i,3, row[0])
-		i += 1
-	stdscr3.refresh()
-
-	stdscr4.addstr(1,3, '"characterName"', curses.A_STANDOUT)
-	stdscr4.addstr(2,3, '"from "character"', curses.A_STANDOUT)
-	stdscr4.refresh()
-
-	cur.execute("SELECT charName FROM character LIMIT 5")
-	i = 3
-	for row in cur.fetchall():
-		stdscr4.addstr(i,1, row[0])
-		i += 1
-	stdscr4.refresh()
-
-	stdscr.getch()
+        databases = postgresSQL_DB_Orchestrator.show_databases()
+        for database in databases:
+            action = os.path.join('show_tables(\"{}\", \"{}\")'.format(database, "PostgresSQL"))
+            postgressql_menu['options'].append({'title': database, 'type': COMMAND, 'command': action})
+        processmenu(postgressql_menu, main_menu)
 #end use_psql()
 
 #MAIN PROGRAM
-mySQL_DB_Orchestrator = MySQLDatabaseOrchestrator("localhost", "root", "password", "")
-rows, columns = os.popen('stty size', 'r').read().split()
-rows = int(rows)
-columns = int(columns)
-processmenu(main_menu)
+if stop == 0:
+
+	mySQL_DB_Orchestrator = DatabaseOrchestrator("localhost", "root", "password", "", "MySQL")
+	postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "ubuntu", "", "postgres", "PostgresSQL")
+	rows, columns = os.popen('stty size', 'r').read().split()
+	rows = int(rows)
+	columns = int(columns)
+	processmenu(main_menu)
+
 
 curses.endwin() #Terminating ncurses application
-
-
