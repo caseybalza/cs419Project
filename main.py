@@ -129,6 +129,7 @@ def versionCheck():
 	time.sleep(5)
 
 	return(stop)
+#end versionCheck()
 
 stop = versionCheck()#If everything needed is installed and correct version continue with program, else halt.
 
@@ -145,7 +146,18 @@ curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_CYAN)
 curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
 curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)
 curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
+	
+#clears screen and outputs exit menu
+def exit_window(new_menu, old_menu):
+	stdscr.clear
+	processmenu(new_menu, old_menu)
+#end exit_window
 
+#closes program
+def exit_program():
+	curses.endwin() #Terminating ncurses application
+	sys.exit()
+#end exit_program()
 
 ######################## MENU FUNCTIONS #######################################################
 # Source to help create menus http://blog.skeltonnetworks.com/2010/03/python-curses-custom-menu/
@@ -173,13 +185,21 @@ main_menu = {
   ]#end of menu options
 }#end of menu data
 
+exit_menu = {
+	'title': "Exit program?", 'type': MENU, 'subtitle': "Please select an action...",
+	'options':[
+  		{ 'title': "Yes", 'type': COMMAND, 'command': 'exit_program()' },
+  ]#end of exit_menu options
+}#end of exit_menu data
 
 # This function displays the appropriate menu and returns the option selected
 def runmenu(menu, parent, start):
 
 	# work out what text to display as the last menu option
 	if parent is None:
-		lastoption = "Exit"
+		lastoption = 0 #display no lastoption
+	elif parent == "No":
+		lastoption = "No"
 	else:
 		lastoption = "Return to %s" % parent['title']
 
@@ -214,14 +234,16 @@ def runmenu(menu, parent, start):
 					stdscr.addstr(5+count,20, "%d - %s" % (count+1, "MORE"), textstyle)				
 					count += 1
 
+			
 			# Now display Exit/Return at bottom of menu
-			textstyle = n
+			if lastoption != 0:
+				textstyle = n
 
-			if pos==count:
-				textstyle = h
-			stdscr.addstr(5+count,20, "%d - %s" % (count+1, lastoption), textstyle)
-			stdscr.refresh()
-			# finished updating screen
+				if pos==count:
+					textstyle = h
+				stdscr.addstr(5+count,20, "%d - %s" % (count+1, lastoption), textstyle)
+				stdscr.refresh()
+				# finished updating screen
 
 		x = stdscr.getch() # Gets user input
 
@@ -241,6 +263,9 @@ def runmenu(menu, parent, start):
 			if pos > 0:
 				pos += -1
 			else: pos = count
+		elif x == 69: # if user entered 'E' (shift + e) from the .getch()
+			pos = 69
+			return pos
 	# return index of the selected item
 	if pos == 8 or pos == optioncount:
 		return -1
@@ -248,6 +273,7 @@ def runmenu(menu, parent, start):
 		return -2
 	else:
 		pos += start
+
 		return pos
 #end runmenu()
 
@@ -260,6 +286,11 @@ def processmenu(menu, parent=None):
 		getin = runmenu(menu, parent, start)
 		if getin == -1 or getin == optioncount:
 			exitmenu = True
+		elif getin == 69: #if user input 'E' (shift + e) bring up exit menu
+			stdscr.clear()
+			saying = "No"
+			exit_window(exit_menu, saying) #open exit window
+			stdscr.clear()#Clear screen of exit menu if user did not exit
 		elif getin == -2:
 			start += 7
 			stdscr.clear()
@@ -279,6 +310,7 @@ def processmenu(menu, parent=None):
 		elif menu['options'][getin]['type'] == EXITMENU:
 		  	exitmenu = True
 #end processmenu()
+
 
 ################### END OF MENU FUNCTIONS #######################################################
 
@@ -362,8 +394,8 @@ def use_psql():
 #end use_psql()
 
 #MAIN PROGRAM
-
 if stop == 0:
+
 	mySQL_DB_Orchestrator = DatabaseOrchestrator("localhost", "root", "password", "", "MySQL")
 	postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "ubuntu", "", "postgres", "PostgresSQL")
 	rows, columns = os.popen('stty size', 'r').read().split()
