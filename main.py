@@ -12,126 +12,13 @@ import subprocess
 import sys
 import time
 from utils.DatabaseOrchestrator import DatabaseOrchestrator
-
-#ANSI escape sequence colors for changing text color without using curses
-#source: stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
-class terminalColors:
-	SUCCESS = '\33[1m\33[32m'
-	FAIL = '\33[1m\33[31m'
-	ENDC = '\33[0m'
-
-#Checks if applications are/or installed and are of correct version.
-#Sources used:
-#stackoverflow.com/questions/5847934/how-to-check-if-python-module-exists-and-can-be-imported
-#stackoverflow.com/questions/710609/checking-a-python-module-version-at-runtime
-#stackoverflow.com/questions/11269575/how-to-hide-output-of-subprocess-in-python-2-7
-def versionCheck():
-	stop = 0 #Used to determine if there was a failure, if so halt program.
-
-	#Check to see if required programs are and installed and have correct version.
-	check_these_programs = [["python", "mysql", "psql"], ["2.7", "14", "9"]]
-	
-	for i in range(0, len(check_these_programs[0])):
-		j = 1 #used for indexing in 2-D array
-		
-		#Used to redirect output from subprocess to devnull (don't want it printed to screen), closes after subprocess 			 finishes.
-		fnull = open(os.devnull, 'w')
-		try:
-			subprocess.call([check_these_programs[0][i], "--version"], stdout = fnull, 
-																	   stderr=subprocess.STDOUT,
-																	   close_fds=True)
-		except:#Means program is not installed
-			stop = 1 #Failure do not continue with program
-			result = terminalColors.FAIL + "FAILED" + terminalColors.ENDC
-			print check_these_programs[0][i] + " version " + check_these_programs[j][i] + " - " + result
-			continue #Skip to next iteration
-		else:#Program is installed now need to check versions
-			if check_these_programs[0][i] == "python":
-				major = sys.version_info.major
-				minor = sys.version_info.minor
-				if major == 2 and minor == 7:
-					result = terminalColors.SUCCESS + "SUCCESS" + terminalColors.ENDC
-				else:
-					result = terminalColors.FAIL + "FAILED wrong version" + terminalColors.ENDC
-					stop = 1 #Failure do not continue with program
-			
-			elif check_these_programs[0][i] == "psql":
-				proc = subprocess.Popen(["psql", "--version"], stdout=subprocess.PIPE)
-				ver = proc.communicate()[0]
-				
-				#parse output of psql --version to get major version number
-				ver = ver.split(" ",4)
-				ver = ver[2].split(".", 1)
-				ver = ver[0]
-				
-				if ver == check_these_programs[1][2]:
-					result = terminalColors.SUCCESS + "SUCCESS" + terminalColors.ENDC
-				else:
-					result = terminalColors.FAIL + "FAILED wrong version" + terminalColors.ENDC
-					stop = 1 #Failure do not continue with program
-
-			elif check_these_programs[0][i] == "mysql":
-				proc = subprocess.Popen(["mysql", "--version"], stdout=subprocess.PIPE)
-				ver = proc.communicate()[0]
-				
-				#parse output of psql --version to get major version number
-				ver = ver.split(" ",3)
-				ver = ver[3].split(".", 1)
-				ver = ver[0]
-				
-				if ver == check_these_programs[1][1]:
-					result = terminalColors.SUCCESS + "SUCCESS" + terminalColors.ENDC
-				else:
-					result = terminalColors.FAIL + "FAILED wrong version" + terminalColors.ENDC
-					stop = 1 #Failure do not continue with program
+from utils.view import *
+from utils.initiateProgram import initiateProgram
 
 
-		print check_these_programs[0][i] + " version " + check_these_programs[j][i] + ".* - " + result
-		time.sleep(0.5)
-
-	#Check python modules
-	check_these_modules = [["curses", "MySQLdb", "psycopg2"],["2.2", "1.2.3", "2.5.3 (dt dec mx pq3 ext)"]]
-	for i in range(0, len(check_these_modules[0])):
-		j = 1 #used for indexing in 2-D array
-
-		try:
-			__import__(check_these_modules[0][i]) #Checking modules are installed.
-		except ImportError:
-			stop = 1 #Failure do not continue with program
-			result = terminalColors.FAIL + "FAILED" + terminalColors.ENDC
-			print check_these_modules[0][i] + " version " + check_these_modules[j][i] + " - " + result
-			continue #Skip to next iteration
-		else:#Is installed, but need to check for correct version.
-			if check_these_modules[0][i] == "curses":#curses uses different syntax to check for version
-				ver = curses.version
-			else:
-				ver = eval(check_these_modules[0][i] + '.__version__')
-
-			if check_these_modules[j][i] == ver:
-				result = terminalColors.SUCCESS + "SUCCESS" + terminalColors.ENDC
-			else:
-				result = terminalColors.FAIL + "FAILED" + terminalColors.ENDC
-				stop = 1 #Failure do not continue with program
-
-			print check_these_modules[0][i] + " version " + check_these_modules[j][i] + " - " + result
-			time.sleep(0.5)
-		
-		j += 1
-
-	
-	if stop == 1:
-		print terminalColors.FAIL + "ALERT" + terminalColors.ENDC
-		print "One or more items is either not installed or is the incorrect version"
-		print "Now exiting"
-	else:
-		print "Thank you for your patience, now opening program..."
-
-	time.sleep(5)
-
-	return(stop)
-#end versionCheck()
-
-stop = versionCheck()#If everything needed is installed and correct version continue with program, else halt.
+#Check if everything needed is installed and correct version, continue with program, else halt.
+stop = initiateProgram() #create instance of class initiateProgram
+stop = stop.versionCheck() #call versionCheck on the instance.
 
 stdscr = curses.initscr() #initialize ncurses
 curses.noecho() # Disables automatic echoing of key presses (prevents program from input each key twice)
@@ -164,33 +51,6 @@ def exit_program():
 
 h = curses.color_pair(1) #h is the coloring for a highlighted menu option
 n = curses.A_NORMAL #n is the coloring for a non highlighted menu option
-
-MENU = "menu"
-COMMAND = "command"
-EXITMENU = "exitmenu"
-
-main_menu = {
-	'title': "Main Menu", 'type': MENU, 'subtitle': "Please select an option...",
-	'options':[
-  		{ 'title': "Use MySQL databases", 'type': COMMAND, 'command': 'use_mysql()' },
-    	{ 'title': "Use PostgreSQL databases", 'type': COMMAND, 'command': 'use_psql()' },
-		#Menu with a submenu
-        { 'title': "Sebmenu preview", 'type': MENU, 'subtitle': "Please select an option...",
-        	'options': [
-        		{ 'title': "Option1", 'type': COMMAND, 'command': 'testfun()' },
-          		{ 'title': "Option2", 'type': COMMAND, 'command': 'testfun()' },
-          		{ 'title': "Option3", 'type': COMMAND, 'command': 'testfun()' },
-			]#end submenu
-        }
-  ]#end of menu options
-}#end of menu data
-
-exit_menu = {
-	'title': "Exit program?", 'type': MENU, 'subtitle': "Please select an action...",
-	'options':[
-  		{ 'title': "Yes", 'type': COMMAND, 'command': 'exit_program()' },
-  ]#end of exit_menu options
-}#end of exit_menu data
 
 # This function displays the appropriate menu and returns the option selected
 def runmenu(menu, parent, start):
@@ -294,7 +154,7 @@ def processmenu(menu, parent=None):
 		elif getin == -2:
 			start += 7
 			stdscr.clear()
-		elif menu['options'][getin]['type'] == COMMAND:
+		elif menu['options'][getin]['type'] == Dictionary.COMMAND:
 			curses.def_prog_mode()    # save curent curses environment
 			stdscr.clear() #clears previous screen
 			result = (menu['options'][getin]['command']) # Get command into variable
@@ -303,11 +163,11 @@ def processmenu(menu, parent=None):
 			curses.reset_prog_mode()   # reset to 'current' curses environment
 			curses.curs_set(1)         # reset doesn't do this right
 			curses.curs_set(0)
-		elif menu['options'][getin]['type'] == MENU:
+		elif menu['options'][getin]['type'] == Dictionary.MENU:
 			stdscr.clear() #clears previous screen on key press and updates display based on pos
 			processmenu(menu['options'][getin], menu) # display the submenu
 			stdscr.clear() #clears previous screen on key press and updates display based on pos
-		elif menu['options'][getin]['type'] == EXITMENU:
+		elif menu['options'][getin]['type'] == Dictionary.EXITMENU:
 		  	exitmenu = True
 #end processmenu()
 
@@ -350,7 +210,7 @@ def show_tables(dbs, databaseType):
             postgresSQL_DB_Orchestrator.select_database(dbs)
 
         dbs_menu = {
-                'title': dbs + " tables", 'type': MENU, 'subtitle': "Please select a table or action...",
+                'title': dbs + " tables", 'type': Dictionary.MENU, 'subtitle': "Please select a table or action...",
                 'options':[]#end of menu options
         }#end of menu data
 
@@ -359,37 +219,37 @@ def show_tables(dbs, databaseType):
         if databaseType == "PostgresSQL":
             tables = postgresSQL_DB_Orchestrator.show_tables()
 
-        dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': COMMAND, 'command': 'testfun()' })
+        dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': Dictionary.COMMAND, 'command': 'testfun()' })
         for table in tables:
                 action = os.path.join('show_table_contents(\"{}\", \"{}\")'.format(table, databaseType))
-                dbs_menu['options'].append({'title': table, 'type': COMMAND, 'command': action })
+                dbs_menu['options'].append({'title': table, 'type': Dictionary.COMMAND, 'command': action })
         processmenu(dbs_menu, main_menu)
 #end show_tables(dbs)
 
 #Displays information from MySQL server
 def use_mysql():
 	mysql_menu = {
-		'title': "MySql databases", 'type': MENU, 'subtitle': "Please select a database to use...",
+		'title': "MySql databases", 'type': Dictionary.MENU, 'subtitle': "Please select a database to use...",
 		'options':[]#end of menu options
 	}#end of menu data
 
         databases = mySQL_DB_Orchestrator.show_databases()
         for database in databases:
             action = os.path.join('show_tables(\"{}\", \"{}\")'.format(database, "MySQL"))
-            mysql_menu['options'].append({'title': database, 'type': COMMAND, 'command': action })
+            mysql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action })
         processmenu(mysql_menu, main_menu)
 #end use_mysql()
 
 def use_psql():
         postgressql_menu = {
-                'title': "PostgresSQL databases", 'type': MENU, 'subtitle': "Please select a database to use...",
+                'title': "PostgresSQL databases", 'type': Dictionary.MENU, 'subtitle': "Please select a database to use...",
                 'options':[]#end of menu options
         }#end of menu data
 
         databases = postgresSQL_DB_Orchestrator.show_databases()
         for database in databases:
             action = os.path.join('show_tables(\"{}\", \"{}\")'.format(database, "PostgresSQL"))
-            postgressql_menu['options'].append({'title': database, 'type': COMMAND, 'command': action})
+            postgressql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action})
         processmenu(postgressql_menu, main_menu)
 #end use_psql()
 
@@ -397,7 +257,7 @@ def use_psql():
 if stop == 0:
 
 	mySQL_DB_Orchestrator = DatabaseOrchestrator("localhost", "root", "password", "", "MySQL")
-	postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "ubuntu", "", "postgres", "PostgresSQL")
+	postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "root", "", "postgres", "PostgresSQL")
 	rows, columns = os.popen('stty size', 'r').read().split()
 	rows = int(rows)
 	columns = int(columns)
