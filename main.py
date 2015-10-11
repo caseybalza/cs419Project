@@ -257,7 +257,7 @@ def use_psql():
 if stop == 0:
 
 	mySQL_DB_Orchestrator = DatabaseOrchestrator("localhost", "root", "password", "", "MySQL")
-	postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "root", "", "postgres", "PostgresSQL")
+	postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "ubuntu", "", "postgres", "PostgresSQL")
 	rows, columns = os.popen('stty size', 'r').read().split()
 	rows = int(rows)
 	columns = int(columns)
