@@ -14,8 +14,6 @@ import time
 from utils.DatabaseOrchestrator import DatabaseOrchestrator
 from utils.initiateProgram import versionCheck
 from utils.initiateProgram import terminalColors
-from utils.NcursesViewHandler import *
-from utils.MenuHandler import *
 
 
 
@@ -34,9 +32,6 @@ curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_CYAN)
 curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
 curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)
 curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
-
-h = curses.color_pair(1) #h is the coloring for a highlighted menu option
-n = curses.A_NORMAL #n is the coloring for a non highlighted menu option
 	
 #clears screen and outputs exit menu
 def exit_window(new_menu, old_menu):
@@ -51,6 +46,186 @@ def exit_program():
 #end exit_program()
 
 ######################## MENU FUNCTIONS #######################################################
+# Source to help create menus http://blog.skeltonnetworks.com/2010/03/python-curses-custom-menu/
+
+h = curses.color_pair(1) #h is the coloring for a highlighted menu option
+n = curses.A_NORMAL #n is the coloring for a non highlighted menu option
+
+MENU = "menu"
+COMMAND = "command"
+EXITMENU = "exitmenu"
+FORM = "form"
+TEXT = "text"
+
+
+login_form = {
+	'title': "Login", 'type': FORM, 'subtitle': "Please login to your db account",
+	'fields':[
+		{'title': "Username", 'type': TEXT},
+		{'title': "Password", 'type': TEXT}
+	],
+	'options': [
+		{'title': "Back", 'type': COMMAND, 'command': 'processMenu(main_menu)'},
+		{'title': "Continue", 'type': COMMAND, 'command': 'testfun()'}
+	]
+}
+
+main_menu = {
+	'title': "Main Menu", 'type': MENU, 'subtitle': "Please select an option...",
+	'options':[
+  		{ 'title': "Use MySQL databases", 'type': COMMAND, 'command': 'use_mysql()' },
+    	{ 'title': "Use PostgreSQL databases", 'type': COMMAND, 'command': 'use_psql()' },
+		#Menu with a submenu
+        { 'title': "Sebmenu preview", 'type': MENU, 'subtitle': "Please select an option...",
+        	'options': [
+        		{ 'title': "Option1", 'type': COMMAND, 'command': 'testfun()' },
+          		{ 'title': "Option2", 'type': COMMAND, 'command': 'testfun()' },
+          		{ 'title': "Option3", 'type': COMMAND, 'command': 'testfun()' },
+			]#end submenu
+        }
+  ]#end of menu options
+}#end of menu data
+
+exit_menu = {
+	'title': "Exit program?", 'type': MENU, 'subtitle': "Please select an action...",
+	'options':[
+  		{ 'title': "Yes", 'type': COMMAND, 'command': 'exit_program()' },
+  ]#end of exit_menu options
+}#end of exit_menu data
+
+def runform(form):
+
+	fieldcount = len(form['fields'])# how many fields there are in the form
+	optioncount = len(form['options'])# how many options there are
+
+	pos=0
+	oldpos=None
+	x = None
+	optionselect = 0
+	results = []
+
+	# Display all fields
+
+	for index in range(fieldcount):
+		
+		if index < fieldcount:
+			stdr.addstr(5+index,20, "%d - %s" % (index+1, menu['field'][index]['title']), n)
+			index += 1
+
+	stdscr.border(0)
+	stdscr.addstr(2,35, menu['title'], curses.A_STANDOUT) # Title for this menu
+	stdscr.addstr(4,16, menu['subtitle'], curses.A_BOLD) # Subtitle for this menu
+	stdscr.addstr(28,23, "Created By: Casey Balza, Daryle Cooke, & Nick Jurczak", curses.color_pair(2))
+
+	#display options			
+
+	for index in range(optioncount):
+		textstyle = n
+	
+		if pos==fieldcount:
+			if optionselect==index:
+				textstyle = h
+		stdscr.addstr(5+count+(index*20),20, "%d - %s" % (fieldcount+1, menu['options'][index]['title']), textstyle)
+		stdscr.refresh()
+
+	for index in range(fieldcount):
+		if form['field']['type'] == TEXT:
+			win = curses.newwin(1,30,5+index,20+len(menu['field'][index]['title']))
+			tb = curses.textpad.Textbox(win)
+			text = None
+			def check(input):
+				if input == 13:
+					tb.gather()
+			tb.do_command(check)
+			text = tb.edit()
+			results.append(text)
+			
+
+# This function displays the appropriate menu and returns the option selected
+def runmenu(menu, parent, start):
+
+	# work out what text to display as the last menu option
+	if parent is None:
+		lastoption = 0 #display no lastoption
+	elif parent == "No":
+		lastoption = "No"
+	else:
+		lastoption = "Return to %s" % parent['title']
+
+	optioncount = len(menu['options']) # how many options in this menu
+
+	pos=0 #pos is the zero-based index of the hightlighted menu option. Every time runmenu is called, position 			  returns to 0, when runmenu ends the position is returned and tells the program what opt$
+	oldpos=None # used to prevent the screen being redrawn every time
+	x = None #control for while loop, let's you scroll through options until return key is pressed then returns 		     pos to program
+
+	# Loop until return key is pressed
+	while x !=ord('\n'):
+		if pos != oldpos:
+			oldpos = pos
+			stdscr.border(0)
+			stdscr.addstr(2,35, menu['title'], curses.A_STANDOUT) # Title for this menu
+			stdscr.addstr(4,16, menu['subtitle'], curses.A_BOLD) #Subtitle for this menu
+			stdscr.addstr(28,23, "Created By: Casey Balza, Daryl Cooke, & Nickolas Jurczak", curses.color_pair(2))
+
+			# Display all the menu items, showing the 'pos' item highlighted
+			count = 0
+			for index in range(optioncount):
+				index += start
+				textstyle = n
+
+				if pos==count:
+					textstyle = h
+				if count < 7 and index < optioncount:
+					stdscr.addstr(5+count,20, "%d - %s" % (count+1, menu['options'][index]['title']), textstyle)
+					count += 1
+
+				elif count == 7:
+					stdscr.addstr(5+count,20, "%d - %s" % (count+1, "MORE"), textstyle)				
+					count += 1
+
+			
+			# Now display Exit/Return at bottom of menu
+			if lastoption != 0:
+				textstyle = n
+
+				if pos==count:
+					textstyle = h
+				stdscr.addstr(5+count,20, "%d - %s" % (count+1, lastoption), textstyle)
+				stdscr.refresh()
+				# finished updating screen
+
+		x = stdscr.getch() # Gets user input
+
+		# What is user input?
+		max = 0
+		if optioncount <= 8:
+			max = ord(str(optioncount+1))
+		else:
+			max = ord('9')
+		if x >= ord('1') and x <= max:
+			pos = x - ord('0') - 1 # convert keypress back to a number, then subtract 1 to get index
+		elif x == 258: # down arrow
+			if pos < count:
+				pos += 1
+			else: pos = 0
+		elif x == 259: # up arrow
+			if pos > 0:
+				pos += -1
+			else: pos = count
+		elif x == 69: # if user entered 'E' (shift + e) from the .getch()
+			pos = 69
+			return pos
+	# return index of the selected item
+	if pos == 8 or pos == optioncount:
+		return -1
+	elif pos == 7:
+		return -2
+	else:
+		pos += start
+
+		return pos
+#end runmenu()
+
 # This function calls showmenu and then acts on the selected item
 def processmenu(menu, parent=None):
 	if menu['type'] == MENU:
@@ -58,7 +233,7 @@ def processmenu(menu, parent=None):
 		exitmenu = False
 		start = 0
 		while not exitmenu: #Loop until the user exits the menu
-			getin = runmenu(menu, parent, start, stdscr)
+			getin = runmenu(menu, parent, start)
 			if getin == -1 or getin == optioncount:
 				exitmenu = True
 			elif getin == 69: #if user input 'E' (shift + e) bring up exit menu
@@ -89,9 +264,8 @@ def processmenu(menu, parent=None):
 		testfun()
 #end processmenu()
 
-################### END OF MENU FUNCTIONS 
-#######################################################
 
+################### END OF MENU FUNCTIONS #######################################################
 
 #Test function
 def testfun():
