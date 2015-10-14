@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 from utils.DatabaseOrchestrator import DatabaseOrchestrator
+<<<<<<< HEAD
 from utils.view import *
 from utils.initiateProgram import initiateProgram
 from utils.NCursesHandler import NCursesHandler
@@ -20,6 +21,33 @@ from utils.NCursesHandler import NCursesHandler
 #Check if everything needed is installed and correct version, continue with program, else halt.
 stop = initiateProgram() #create instance of class initiateProgram
 stop = stop.versionCheck() #call versionCheck on the instance.
+=======
+from utils.initiateProgram import versionCheck
+from utils.initiateProgram import terminalColors
+from utils.NcursesViewHandler import *
+from utils.MenuHandler import *
+
+
+
+stop = versionCheck()#If everything needed is installed and correct version continue with program, else halt.
+
+stdscr = curses.initscr() #initialize ncurses
+curses.noecho() # Disables automatic echoing of key presses (prevents program from input each key twice)
+curses.cbreak() # Runs each key as it is pressed rather than waiting for the return key to pressed)
+curses.start_color() #allow colors
+stdscr.keypad(1) # Capture input from keypad allow to move around on menus
+
+#Create color pairs.
+curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_YELLOW)
+curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLUE)
+curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_CYAN)
+curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
+curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)
+curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
+
+h = curses.color_pair(1) #h is the coloring for a highlighted menu option
+n = curses.A_NORMAL #n is the coloring for a non highlighted menu option
+>>>>>>> origin/menu-test-nj
 	
 #clears screen and outputs exit menu
 def exit_window(new_menu, old_menu):
@@ -34,11 +62,52 @@ def exit_program():
 #end exit_program()
 
 ######################## MENU FUNCTIONS #######################################################
+<<<<<<< HEAD
 # Source to help create menus http://blog.skeltonnetworks.com/2010/03/python-curses-custom-menu/
 
+=======
+# This function calls showmenu and then acts on the selected item
+def processmenu(menu, parent=None):
+	if menu['type'] == MENU:
+		optioncount = len(menu['options'])
+		exitmenu = False
+		start = 0
+		while not exitmenu: #Loop until the user exits the menu
+			getin = runmenu(menu, parent, start, stdscr)
+			if getin == -1 or getin == optioncount:
+				exitmenu = True
+			elif getin == 69: #if user input 'E' (shift + e) bring up exit menu
+				stdscr.clear()
+				saying = "No"
+				exit_window(exit_menu, saying) #open exit window
+				stdscr.clear()#Clear screen of exit menu if user did not exit
+			elif getin == -2:
+				start += 7
+				stdscr.clear()
+			elif menu['options'][getin]['type'] == COMMAND:
+				curses.def_prog_mode()    # save curent curses environment
+				stdscr.clear() #clears previous screen
+				result = (menu['options'][getin]['command']) # Get command into variable
+				eval(result)#Call the command
+				stdscr.clear() #clears previous screen on key press and updates display based on pos
+				curses.reset_prog_mode()   # reset to 'current' curses environment
+				curses.curs_set(1)         # reset doesn't do this right
+				curses.curs_set(0)
+			elif menu['options'][getin]['type'] == MENU:
+				stdscr.clear() #clears previous screen on key press and updates display based on pos
+				processmenu(menu['options'][getin], menu) # display the submenu
+				stdscr.clear() #clears previous screen on key press and updates display based on pos
+			elif menu['options'][getin]['type'] == EXITMENU:
+			  	exitmenu = True
+	
+	elif menu['type'] == FORM:
+		testfun()
+#end processmenu()
+>>>>>>> origin/menu-test-nj
 
+################### END OF MENU FUNCTIONS 
+#######################################################
 
-################### END OF MENU FUNCTIONS #######################################################
 
 #Test function
 #def testfun():
