@@ -16,10 +16,14 @@ class NCursesHandler:
 
 
 		self.stdscr = curses.initscr() #initialize ncurses
+		
 		curses.noecho() # Disables automatic echoing of key presses (prevents program from input each key twice)
 		curses.cbreak() # Runs each key as it is pressed rather than waiting for the return key to pressed)
 		curses.start_color() #allow colors
 		self.stdscr.keypad(1) # Capture input from keypad allow to move around on menus
+		self.stdscr.bkgd(' ', curses.color_pair(2))
+		#window for top menu bar
+		self.stdscr2 = curses.newwin(3, 80, 0, 0)
 
 		#Create color pairs.
 		curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_YELLOW)
@@ -28,8 +32,16 @@ class NCursesHandler:
 		curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
 		curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)
 		curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
+		curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
+		curses.init_pair(8, curses.COLOR_BLACK, curses.COLOR_WHITE)
+		curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_RED)
+		curses.init_pair(10, curses.COLOR_BLACK, curses.COLOR_GREEN)
+		curses.init_pair(11, curses.COLOR_CYAN, curses.COLOR_BLACK)
+		curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_CYAN)
+		curses.init_pair(13, curses.COLOR_BLACK, curses.COLOR_BLUE)
+		curses.init_pair(14, curses.COLOR_GREEN, curses.COLOR_BLACK)
 
-		self.h = curses.color_pair(1) #h is the coloring for a highlighted menu option
+		self.h = curses.color_pair(14) #h is the coloring for a highlighted menu option
 		self.n = curses.A_NORMAL #n is the coloring for a non highlighted menu option
 
 	#Clears screen and outputs exit menu
@@ -43,6 +55,17 @@ class NCursesHandler:
 		curses.endwin() #Terminating ncurses application
 		sys.exit()
 	#end exit_program
+
+	def top_bar_menu(self):
+		self.stdscr2.border(0)
+		self.stdscr2.bkgd(' ', curses.color_pair(1))
+		self.stdscr2.addstr(1,1, 'SQL-Manager v1.0|')
+		self.stdscr2.addstr(1,18, 'Location:')
+		self.stdscr2.addstr(1,69, 'H', curses.A_UNDERLINE)
+		self.stdscr2.addstr(1,70, 'elp')
+		self.stdscr2.addstr(1,75, 'E', curses.A_UNDERLINE)
+		self.stdscr2.addstr(1,76, 'xit')
+		self.stdscr2.refresh()
 
 	#properly loads form, returns values entered
 	def runform(self, form):
@@ -67,7 +90,11 @@ class NCursesHandler:
 		self.stdscr.border(0)
 		self.stdscr.addstr(2,35, form['title'], curses.A_STANDOUT) # Title for this menu
 		self.stdscr.addstr(4,16, form['subtitle'], curses.A_BOLD) # Subtitle for this menu
-		self.stdscr.addstr(28,23, "Created By: Casey Balza, Daryle Cooke, & Nick Jurczak", curses.color_pair(2))
+		self.stdscr.addstr(28,23, "Created By: Casey Balza, Daryle Cooke, & Nick Jurczak", curses.color_pair(13))
+		self.stdscr.refresh()
+
+		#top menu bar
+		self.top_bar_menu()
 
 		#display options			
 
@@ -139,10 +166,14 @@ class NCursesHandler:
 		while x !=ord('\n'):
 			if pos != oldpos:
 				oldpos = pos
-				self.stdscr.border(0)
+				#self.stdscr.border(0)
 				self.stdscr.addstr(2,35, menu['title'], curses.A_STANDOUT) # Title for this menu
 				self.stdscr.addstr(4,16, menu['subtitle'], curses.A_BOLD) #Subtitle for this menu
-				self.stdscr.addstr(28,23, "Created By: Casey Balza, Daryl Cooke, & Nickolas Jurczak", curses.color_pair(2))
+				self.stdscr.addstr(28,23, "Created By: Casey Balza, Daryl Cooke, & Nickolas Jurczak", curses.color_pair(13))
+				self.stdscr.refresh()
+				
+				#top menu bar
+				self.top_bar_menu()
 
 				# Display all the menu items, showing the 'pos' item highlighted
 				count = 0
@@ -182,9 +213,14 @@ class NCursesHandler:
 			if x >= ord('1') and x <= max:
 				pos = x - ord('0') - 1 # convert keypress back to a number, then subtract 1 to get index
 			elif x == 258: # down arrow
-				if pos < count - 1:
-					pos += 1
-				else: pos = pos
+				if(lastoption == 0):
+					if pos < count - 1:
+						pos += 1
+					else: pos = pos
+				else:
+					if pos < count:
+						pos += 1
+					else: pos = pos
 			elif x == 259: # up arrow
 				if pos > 0:
 					pos += -1
