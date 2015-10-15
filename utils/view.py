@@ -5,25 +5,12 @@ class Dictionary:
 	FORM = "form"
 	TEXT = "text"
 
-login_form = {
-	'title': "Login", 'type': Dictionary.FORM, 'subtitle': "Please login to your db account",
-	'fields':[
-		{'title': "Username: ", 'type': Dictionary.TEXT},
-		{'title': "Password: ", 'type': Dictionary.TEXT}
-	],
-	'options': [
-		{'title': "Back", 'type': Dictionary.COMMAND, 'command': 'processMenu(main_menu)'},
-		{'title': "Continue", 'type': Dictionary.COMMAND, 'command': 'testfun()'}
-	]
-}
-
-
 main_menu = {
 	'title': "Main Menu", 'type': Dictionary.MENU, 'subtitle': "Please select an option...",
 	'options':[
-  		{ 'title': "Use MySQL databases", 'type': Dictionary.COMMAND, 'command': 'use_mysql()' },
-    	{ 'title': "Use PostgreSQL databases", 'type': Dictionary.COMMAND, 'command': 'use_psql()' },
-	{ 'title': "Login Test", 'type': Dictionary.COMMAND, 'command': 'login(ncurses)' },
+  		{ 'title': "Use MySQL databases", 'type': Dictionary.COMMAND, 'command': 'login(0)' },
+    	{ 'title': "Use PostgreSQL databases", 'type': Dictionary.COMMAND, 'command': 'login(1)' },
+	#{ 'title': "Login Test", 'type': Dictionary.COMMAND, 'command': 'login(ncurses)' },
 		#Menu with a submenu
         { 'title': "Sebmenu preview", 'type': Dictionary.MENU, 'subtitle': "Please select an option...",
         	'options': [
@@ -42,3 +29,14 @@ exit_menu = {
   ]#end of exit_menu options
 }#end of exit_menu data
 
+login_form = {
+	'title': "Login", 'type': Dictionary.FORM, 'subtitle': "Please login to your db account",
+	'fields':[
+		{'title': "Username: ", 'type': Dictionary.TEXT},
+		{'title': "Password: ", 'type': Dictionary.TEXT}
+	],
+	'options': [
+		{'title': "Back", 'type': Dictionary.COMMAND, 'command': str(main_menu)},
+		{'title': "Continue", 'type': Dictionary.COMMAND, 'command': 'use_mysql()'}
+	]
+}

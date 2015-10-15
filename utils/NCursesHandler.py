@@ -57,7 +57,7 @@ class NCursesHandler:
 		x = None
 		optionselect = 0
 		results = []
-
+		returnvalue = {'fields':None, 'option':None}
 		# Display all fields
 
 		for index in range(fieldcount):
@@ -92,7 +92,32 @@ class NCursesHandler:
 						tb.gather()
 				tb.do_command(check)
 				text = tb.edit()
-				results.append(text)
+				results.append(text.strip())
+		sys.stdout.flush()
+		while x !=ord('\n'):
+			if pos != oldpos:
+				oldpos = pos
+				for index in range(optioncount):
+					textstyle = self.n
+
+					if pos==index:
+						textstyle = self.h
+					self.stdscr.addstr(5+5*fieldcount,20+(index*20), "%s" % (form['options'][index]['title']), textstyle)
+				self.stdscr.refresh()
+
+			x = self.stdscr.getch()
+			if x == curses.KEY_RIGHT:
+				pos += 1
+				pos %= optioncount
+			elif x == curses.KEY_LEFT:
+				if pos > 0:
+					pos -= 1
+				else:
+					pos = optioncount -1
+		returnvalue['fields'] = results
+		returnvalue['option'] = form['options'][pos]
+		return returnvalue
+
 
 
 	# This function displays the appropriate menu and returns the option selected
@@ -111,7 +136,6 @@ class NCursesHandler:
 		pos=0 #pos is the zero-based index of the hightlighted menu option. Every time runmenu is called, position 			  returns to 0, when runmenu ends the position is returned and tells the program what opt$
 		oldpos=None # used to prevent the screen being redrawn every time
 		x = None #control for while loop, let's you scroll through options until return key is pressed then returns 		     pos to program
-
 		# Loop until return key is pressed
 		while x !=ord('\n'):
 			if pos != oldpos:
@@ -217,8 +241,20 @@ class NCursesHandler:
 				elif menu['options'][getin]['type'] == Dictionary.EXITMENU:
 		  			exitmenu = True
 		else:
-			self.runform(menu)
+			result = self.runform(menu)
+			#return result['option']['command']
+			return result['option']['command']+str(result['fields'])+')'
 	#end processmenu()
+	
+	def setuplogin(self, type):
+		form = login_form
+		function = None
+		if type == 0:
+			function = 'use_mysql(DB_Orchestrator, '
+		elif type == 1:
+			function = 'use_psql(DB_Orchestrator, '
+		form['options'][1]['command'] = function
+		return form
 	
 	# Starts program with main menu
 	def startmenu(self):

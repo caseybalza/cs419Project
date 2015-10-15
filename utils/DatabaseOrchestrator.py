@@ -4,7 +4,7 @@ from DatabaseExceptions import *
 
 class DatabaseOrchestrator:
 
-    def __init__(self, host, user, passwd, database, databaseType):
+    def load(self, host, user, passwd, database, databaseType):
         self.host = host
         self.user = user
         self.passwd = passwd
