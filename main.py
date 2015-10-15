@@ -106,6 +106,7 @@ def login(type):
 
 def mainFunction(screen): 
     #MAIN PROGRAM
+
     if stop == 0:
             #processmenu(main_menu)
             results=ncurses.startmenu()

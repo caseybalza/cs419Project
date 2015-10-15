@@ -38,7 +38,7 @@ class NCursesHandler:
 		curses.init_pair(10, curses.COLOR_BLACK, curses.COLOR_GREEN)
 		curses.init_pair(11, curses.COLOR_CYAN, curses.COLOR_BLACK)
 		curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_CYAN)
-		curses.init_pair(13, curses.COLOR_BLACK, curses.COLOR_BLUE)
+		curses.init_pair(13, curses.COLOR_YELLOW, curses.COLOR_BLUE)
 		curses.init_pair(14, curses.COLOR_GREEN, curses.COLOR_BLACK)
 
 		self.h = curses.color_pair(14) #h is the coloring for a highlighted menu option
@@ -57,7 +57,7 @@ class NCursesHandler:
 	#end exit_program
 
 	def top_bar_menu(self):
-		self.stdscr2.border(0)
+		self.stdscr2.border(0, 0, 61, 61, 1, 1, 1, 1)
 		self.stdscr2.bkgd(' ', curses.color_pair(1))
 		self.stdscr2.addstr(1,1, 'SQL-Manager v1.0|')
 		self.stdscr2.addstr(1,18, 'Location:')
