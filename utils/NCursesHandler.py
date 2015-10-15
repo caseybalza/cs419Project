@@ -57,14 +57,14 @@ class NCursesHandler:
 	#end exit_program
 
 	def top_bar_menu(self):
-		self.stdscr2.border(0, 0, 61, 61, 1, 1, 1, 1)
+		self.stdscr2.border(124, 124, 61, 61, 35, 35, 35, 35)
 		self.stdscr2.bkgd(' ', curses.color_pair(1))
-		self.stdscr2.addstr(1,1, 'SQL-Manager v1.0|')
-		self.stdscr2.addstr(1,18, 'Location:')
-		self.stdscr2.addstr(1,69, 'H', curses.A_UNDERLINE)
-		self.stdscr2.addstr(1,70, 'elp')
-		self.stdscr2.addstr(1,75, 'E', curses.A_UNDERLINE)
-		self.stdscr2.addstr(1,76, 'xit')
+		self.stdscr2.addstr(1,2, 'SQL-Manager v1.0|')
+		self.stdscr2.addstr(1,21, 'Location:')
+		self.stdscr2.addstr(1,67, 'H', curses.A_UNDERLINE)
+		self.stdscr2.addstr(1,68, 'elp')
+		self.stdscr2.addstr(1,73, 'E', curses.A_UNDERLINE)
+		self.stdscr2.addstr(1,74, 'xit')
 		self.stdscr2.refresh()
 
 	#properly loads form, returns values entered
