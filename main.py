@@ -18,8 +18,8 @@ from utils.NCursesHandler import NCursesHandler
 
 
 #Check if everything needed is installed and correct version, continue with program, else halt.
-#stop = initiateProgram() #create instance of class initiateProgram
-#stop = stop.versionCheck() #call versionCheck on the instance.
+stop = initiateProgram() #create instance of class initiateProgram
+stop = stop.versionCheck() #call versionCheck on the instance.
 	
 def show_table_contents(table, databaseType):
         if databaseType == "MySQL":
@@ -105,7 +105,6 @@ def login(type):
 	#return login_form
 
 #MAIN PROGRAM
-stop = 0;
 if stop == 0:
 
 	#mySQL_DB_Orchestrator = DatabaseOrchestrator("localhost", "root", "password", "", "MySQL")

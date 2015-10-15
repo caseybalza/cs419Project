@@ -195,8 +195,8 @@ class NCursesHandler:
 		# return index of the selected item
 		if pos == 8 or pos == optioncount:
 			return -1
-		#elif pos == 7:
-		#	return -2
+		elif pos == 7:
+			return -2
 		else:
 			pos += start
 
