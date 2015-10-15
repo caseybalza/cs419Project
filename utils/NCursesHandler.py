@@ -131,10 +131,11 @@ class NCursesHandler:
 
 		optioncount = len(menu['options']) # how many options in this menu
 
-		pos=0 #pos is the zero-based index of the hightlighted menu option. Every time runmenu is called, position 			  returns to 0, when runmenu ends the position is returned and tells the program what opt$
+		pos=0 #pos is the zero-based index of the hightlighted menu option. Every time runmenu is called,
+			  # position returns to 0, when runmenu ends the position is returned and tells the program what opt$
 		oldpos=None # used to prevent the screen being redrawn every time
-		x = None #control for while loop, let's you scroll through options until return key is pressed then returns 		     pos to program
-		# Loop until return key is pressed
+		x = None #control for while loop, let's you scroll through options until return key is pressed then returns pos to program
+		         # Loop until return key is pressed
 		while x !=ord('\n'):
 			if pos != oldpos:
 				oldpos = pos
@@ -181,21 +182,21 @@ class NCursesHandler:
 			if x >= ord('1') and x <= max:
 				pos = x - ord('0') - 1 # convert keypress back to a number, then subtract 1 to get index
 			elif x == 258: # down arrow
-				if pos < count:
+				if pos < count - 1:
 					pos += 1
-				else: pos = 0
+				else: pos = pos
 			elif x == 259: # up arrow
 				if pos > 0:
 					pos += -1
-				else: pos = count
+				else: pos = 0
 			elif x == 69: # if user entered 'E' (shift + e) from the .getch()
 				pos = 69
 				return pos
 		# return index of the selected item
 		if pos == 8 or pos == optioncount:
 			return -1
-		elif pos == 7:
-			return -2
+		#elif pos == 7:
+		#	return -2
 		else:
 			pos += start
 
@@ -206,10 +207,9 @@ class NCursesHandler:
 	# This function calls showmenu and then acts on the selected item
 	def processmenu(self, menu, parent=None):
 		optioncount = len(menu['options'])
-		exitmenu = False
 		start = 0
 		if menu['type'] == Dictionary.MENU:
-			while not exitmenu: #Loop until the user exits the menu
+			while (1): #Loop until the user exits the menu
 				getin = self.runmenu(menu, parent, start)
 				if getin == -1 or getin == optioncount:
 					return str(parent)
@@ -236,8 +236,7 @@ class NCursesHandler:
 					self.stdscr.clear() #clears previous screen on key press and updates display based on pos
 					self.processmenu(menu['options'][getin], menu) # display the submenu
 					self.stdscr.clear() #clears previous screen on key press and updates display based on pos
-				elif menu['options'][getin]['type'] == Dictionary.EXITMENU:
-		  			exitmenu = True
+
 		else:
 			result = self.runform(menu)
 			#return result['option']['command']

@@ -9,16 +9,8 @@ main_menu = {
 	'title': "Main Menu", 'type': Dictionary.MENU, 'subtitle': "Please select an option...",
 	'options':[
   		{ 'title': "Use MySQL databases", 'type': Dictionary.COMMAND, 'command': 'login(0)' },
-    	{ 'title': "Use PostgreSQL databases", 'type': Dictionary.COMMAND, 'command': 'login(1)' },
+    	{ 'title': "Use PostgreSQL databases", 'type': Dictionary.COMMAND, 'command': 'login(1)' }
 	#{ 'title': "Login Test", 'type': Dictionary.COMMAND, 'command': 'login(ncurses)' },
-		#Menu with a submenu
-        { 'title': "Sebmenu preview", 'type': Dictionary.MENU, 'subtitle': "Please select an option...",
-        	'options': [
-        		{ 'title': "Option1", 'type': Dictionary.COMMAND, 'command': 'testfun(ncurses)' },
-          		{ 'title': "Option2", 'type': Dictionary.COMMAND, 'command': 'testfun()' },
-          		{ 'title': "Option3", 'type': Dictionary.COMMAND, 'command': 'testfun()' },
-			]#end submenu
-        }
   ]#end of menu options
 }#end of menu data
 
