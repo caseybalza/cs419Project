@@ -22,8 +22,12 @@ class NCursesHandler:
 		curses.start_color() #allow colors
 		self.stdscr.keypad(1) # Capture input from keypad allow to move around on menus
 		self.stdscr.bkgd(' ', curses.color_pair(2))
+
 		#window for top menu bar
 		self.stdscr2 = curses.newwin(3, 80, 0, 0)
+
+		#window help menu
+		self.stdscr3 = curses.newwin(18, 44, 7, 18)
 
 		#Create color pairs.
 		curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_YELLOW)
@@ -56,6 +60,7 @@ class NCursesHandler:
 		sys.exit()
 	#end exit_program
 
+	#Top Menu Bar
 	def top_bar_menu(self):
 		self.stdscr2.border(124, 124, 61, 61, 35, 35, 35, 35)
 		self.stdscr2.bkgd(' ', curses.color_pair(1))
@@ -66,6 +71,21 @@ class NCursesHandler:
 		self.stdscr2.addstr(1,73, 'E', curses.A_UNDERLINE)
 		self.stdscr2.addstr(1,74, 'xit')
 		self.stdscr2.refresh()
+	#end top_menu_bar
+
+	def help_window(self, new_menu, old_menu):
+		
+		self.stdscr3.border(0)
+		self.stdscr3.bkgd(' ', curses.color_pair(8))
+		self.stdscr3.addstr(3,2, 'The "Location" in the top menu bar tells')
+		self.stdscr3.addstr(4,2, 'you where you currently are in a SQL')
+		self.stdscr3.addstr(5,2, 'server.')
+		self.stdscr3.addstr(7,2, '"Shift + E" to exit program')
+		self.stdscr3.addstr(8,2, '"Shift + H" to to bring up help menu')
+		self.stdscr.refresh()
+		self.stdscr3.refresh()
+		self.processmenu(new_menu, old_menu)
+	#end help_window
 
 	#properly loads form, returns values entered
 	def runform(self, form):
@@ -153,6 +173,8 @@ class NCursesHandler:
 			lastoption = 0 #display no lastoption
 		elif parent == "No":
 			lastoption = "No"
+		elif parent == "Close":
+			lastoption = "Close"
 		else:
 			lastoption = "Return to %s" % parent['title']
 
@@ -167,8 +189,8 @@ class NCursesHandler:
 			if pos != oldpos:
 				oldpos = pos
 				#self.stdscr.border(0)
-				self.stdscr.addstr(2,35, menu['title'], curses.A_STANDOUT) # Title for this menu
-				self.stdscr.addstr(4,16, menu['subtitle'], curses.A_BOLD) #Subtitle for this menu
+				self.stdscr.addstr(5,35, menu['title'], curses.A_STANDOUT) # Title for this menu
+				self.stdscr.addstr(7,16, menu['subtitle'], curses.A_BOLD) #Subtitle for this menu
 				self.stdscr.addstr(28,23, "Created By: Casey Balza, Daryl Cooke, & Nickolas Jurczak", curses.color_pair(13))
 				self.stdscr.refresh()
 				
@@ -183,24 +205,31 @@ class NCursesHandler:
 
 					if pos==count:
 						textstyle = self.h
+
 					if count < 7 and index < optioncount:
-						self.stdscr.addstr(5+count,20, "%d - %s" % (count+1, menu['options'][index]['title']), textstyle)
+						self.stdscr.addstr(8+count,20, "%d - %s" % (count+1, menu['options'][index]['title']), textstyle)
 						count += 1
-	
+
 					elif count == 7:
-						self.stdscr.addstr(5+count,20, "%d - %s" % (count+1, "MORE"), textstyle)				
+						self.stdscr.addstr(8+count,20, "%d - %s" % (count+1, "MORE"), textstyle)				
 						count += 1
 
 			
 				# Now display Exit/Return at bottom of menu
-				if lastoption != 0:
+				if lastoption != 0 and lastoption != "Close":
 					textstyle = self.n
 
 					if pos==count:
 						textstyle = self.h
-					self.stdscr.addstr(5+count,20, "%d - %s" % (count+1, lastoption), textstyle)
+					self.stdscr.addstr(8+count,20, "%d - %s" % (count+1, lastoption), textstyle)
 					self.stdscr.refresh()
 					# finished updating screen
+
+				if lastoption == "Close":
+					if pos==count:
+						textstyle = self.h
+					self.stdscr.addstr(23, 37,  "%s" % (lastoption), textstyle)
+					self.stdscr3.refresh()
 
 			x = self.stdscr.getch() # Gets user input
 
@@ -226,7 +255,10 @@ class NCursesHandler:
 					pos += -1
 				else: pos = 0
 			elif x == 69: # if user entered 'E' (shift + e) from the .getch()
-				pos = 69
+				pos = 'exit'
+				return pos
+			elif x == 72: # if user entered 'H' (shift + h) from the .getch()
+				pos = 'help'
 				return pos
 		# return index of the selected item
 		if pos == 8 or pos == optioncount:
@@ -249,10 +281,15 @@ class NCursesHandler:
 				getin = self.runmenu(menu, parent, start)
 				if getin == -1 or getin == optioncount:
 					return str(parent)
-				elif getin == 69: #if user input 'E' (shift + e) bring up exit menu
+				elif getin == 'exit': #if user input 'E' (shift + e) bring up exit menu
 					self.stdscr.clear()
 					saying = "No"
 					self.exit_window(exit_menu, saying) #open exit window
+					self.stdscr.clear()#Clear screen of exit menu if user did not exit
+				elif getin == 'help': #if user input 'E' (shift + e) bring up exit menu
+					self.stdscr.clear()
+					saying = "Close"
+					self.help_window(help_menu, saying) #open exit window
 					self.stdscr.clear()#Clear screen of exit menu if user did not exit
 				elif getin == -2:
 					start += 7

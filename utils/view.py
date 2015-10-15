@@ -21,6 +21,11 @@ exit_menu = {
   ]#end of exit_menu options
 }#end of exit_menu data
 
+help_menu = {
+	'title': "HELP MENU", 'type': Dictionary.MENU, 'subtitle': "",
+	'options':[]#end of exit_menu options
+}#end of exit_menu data
+
 login_form = {
 	'title': "Login", 'type': Dictionary.FORM, 'subtitle': "Please login to your db account",
 	'fields':[
