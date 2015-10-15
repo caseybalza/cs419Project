@@ -16,16 +16,16 @@ from utils.view import *
 from utils.initiateProgram import initiateProgram
 from utils.NCursesHandler import NCursesHandler
 
-
 #Check if everything needed is installed and correct version, continue with program, else halt.
-#stop = initiateProgram() #create instance of class initiateProgram
-#stop = stop.versionCheck() #call versionCheck on the instance.
+
+stop = initiateProgram() #create instance of class initiateProgram
+stop = stop.versionCheck() #call versionCheck on the instance.
 	
+DB_Orchestrator = DatabaseOrchestrator()
+ncurses = NCursesHandler()
+
 def show_table_contents(table, databaseType):
-        if databaseType == "MySQL":
-            tableContents = mySQL_DB_Orchestrator.get_table_for_viewing(table)
-        if databaseType == "PostgresSQL":
-            tableContents = postgresSQL_DB_Orchestrator.get_table_for_viewing(table)
+        DB_Orchestrator.get_table_for_viewing(table)
         #stdscr.clear()
         #stdscr.refresh()
         #schemaRow = curses.newwin(5, columns, 0, 0)
@@ -104,43 +104,35 @@ def login(type):
 	return ncurses.setuplogin(type)
 	#return login_form
 
-#MAIN PROGRAM
-stop = 0;
-if stop == 0:
+def mainFunction(screen): 
+    #MAIN PROGRAM
+    if stop == 0:
+            #processmenu(main_menu)
+            results=ncurses.startmenu()
+            back_list_stack = [] #Create a stack to hold path
+            back_list_stack.append(results) #Add main menu to path
+            nextMenu = eval(results)
+            ncurses.resetscreen()
+            results = ncurses.processmenu(nextMenu)
+            back_list_stack.append(results)#Add option selected from Main menu to path
+            storeold = results;
+            while 1:
 
-	#mySQL_DB_Orchestrator = DatabaseOrchestrator("localhost", "root", "password", "", "MySQL")
-	#postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "ubuntu", "", "postgres", "PostgresSQL")
-	DB_Orchestrator = DatabaseOrchestrator()
-	#rows, columns = os.popen('stty size', 'r').read().split()
-	#rows = int(rows)
-	#columns = int(columns)
-	#processmenu(main_menu)
-	ncurses = NCursesHandler()
-	results=ncurses.startmenu()
-	back_list_stack = [] #Create a stack to hold path
-	back_list_stack.append(results) #Add main menu to path
-	nextMenu = eval(results)
-	ncurses.resetscreen()
-	results = ncurses.processmenu(nextMenu)
-	back_list_stack.append(results)#Add option selected from Main menu to path
-	storeold = results;
-	while 1:
-
-		size = len(back_list_stack)
-		oldMenu = nextMenu
-		nextMenu = eval(results)
-		if nextMenu == storeold:
-			back_list_stack.pop()
-			back_list_stack.pop()
-			size = len(back_list_stack)
-		ncurses.resetscreen()
-		results = ncurses.processmenu(nextMenu, eval(back_list_stack[(size - 2)]))
-		storeold = oldMenu
-		back_list_stack.append(results)
+                    size = len(back_list_stack)
+                    oldMenu = nextMenu
+                    nextMenu = eval(results)
+                    if nextMenu == storeold:
+                            back_list_stack.pop()
+                            back_list_stack.pop()
+                            size = len(back_list_stack)
+                    ncurses.resetscreen()
+                    results = ncurses.processmenu(nextMenu, eval(back_list_stack[(size - 2)]))
+	            storeold = oldMenu
+		    back_list_stack.append(results)
 		
 		
 
-
+curses.wrapper(mainFunction)
 
 #curses.endwin() #Terminating ncurses application
 
