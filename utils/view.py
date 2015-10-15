@@ -14,7 +14,7 @@ main_menu = {
 		#Menu with a submenu
         { 'title': "Sebmenu preview", 'type': Dictionary.MENU, 'subtitle': "Please select an option...",
         	'options': [
-        		{ 'title': "Option1", 'type': Dictionary.COMMAND, 'command': 'testfun()' },
+        		{ 'title': "Option1", 'type': Dictionary.COMMAND, 'command': 'testfun(ncurses)' },
           		{ 'title': "Option2", 'type': Dictionary.COMMAND, 'command': 'testfun()' },
           		{ 'title': "Option3", 'type': Dictionary.COMMAND, 'command': 'testfun()' },
 			]#end submenu
@@ -25,7 +25,7 @@ main_menu = {
 exit_menu = {
 	'title': "Exit program?", 'type': Dictionary.MENU, 'subtitle': "Please select an action...",
 	'options':[
-  		{ 'title': "Yes", 'type': Dictionary.COMMAND, 'command': 'exit_program(ncurses)' },
+  		{ 'title': "Yes", 'type': Dictionary.COMMAND, 'command': 'EXIT' },
   ]#end of exit_menu options
 }#end of exit_menu data
 

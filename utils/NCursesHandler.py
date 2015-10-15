@@ -41,8 +41,6 @@ class NCursesHandler:
 	#closes program
 	def exit_program(self):
 		curses.endwin() #Terminating ncurses application
-		self.stdscr.addstr(0,0, "IN exit program")
-		time.sleep(15)
 		sys.exit()
 	#end exit_program
 
@@ -206,12 +204,10 @@ class NCursesHandler:
 
 
 	# This function calls showmenu and then acts on the selected item
-	def processmenu(self, menu, parent=-1):
+	def processmenu(self, menu, parent=None):
 		optioncount = len(menu['options'])
 		exitmenu = False
 		start = 0
-		if parent==-1:
-			parent = main_menu
 		if menu['type'] == Dictionary.MENU:
 			while not exitmenu: #Loop until the user exits the menu
 				getin = self.runmenu(menu, parent, start)
@@ -229,6 +225,8 @@ class NCursesHandler:
 					curses.def_prog_mode()    # save curent curses environment
 					self.stdscr.clear() #clears previous screen
 					result = (menu['options'][getin]['command']) # Get command into variable
+					if(result == 'EXIT'):
+						self.exit_program()
 					return result#Call the command
 					#stdscr.clear() #clears previous screen on key press and updates display based on pos
 					#curses.reset_prog_mode()   # reset to 'current' curses environment

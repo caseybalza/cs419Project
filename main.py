@@ -21,33 +21,6 @@ from utils.NCursesHandler import NCursesHandler
 stop = initiateProgram() #create instance of class initiateProgram
 stop = stop.versionCheck() #call versionCheck on the instance.
 	
-#clears screen and outputs exit menu
-def exit_window(new_menu, old_menu):
-	stdscr.clear
-	processmenu(new_menu, old_menu)
-#end exit_window
-
-#closes program
-def exit_program():
-	curses.endwin() #Terminating ncurses application
-	sys.exit()
-#end exit_program()
-
-######################## MENU FUNCTIONS #######################################################
-# Source to help create menus http://blog.skeltonnetworks.com/2010/03/python-curses-custom-menu/
-
-
-
-################### END OF MENU FUNCTIONS #######################################################
-
-#Test function
-#def testfun():
-	#stdscr.clear()
-	#stdscr.refresh()
-	#stdscr.addstr(2,2, "WORKING", curses.A_STANDOUT)
-	#stdscr.getch()
-#end testfun()
-
 def show_table_contents(table, databaseType):
         if databaseType == "MySQL":
             tableContents = mySQL_DB_Orchestrator.get_table_for_viewing(table)
@@ -143,19 +116,34 @@ if stop == 0:
 	#processmenu(main_menu)
 	ncurses = NCursesHandler()
 	results=ncurses.startmenu()
+	back_list_stack = [] #Create a stack to hold path
+	back_list_stack.append(results) #Add main menu to path
 	nextMenu = eval(results)
 	ncurses.resetscreen()
 	results = ncurses.processmenu(nextMenu)
-	storeold = None
+	back_list_stack.append(results)#Add option selected from Main menu to path
+	storeold = results;
 	while 1:
+
+		size = len(back_list_stack)
 		oldMenu = nextMenu
 		nextMenu = eval(results)
 		if nextMenu == storeold:
-			oldMenu = -1
+			back_list_stack.pop()
+			back_list_stack.pop()
+			size = len(back_list_stack)
 		ncurses.resetscreen()
-		results = ncurses.processmenu(nextMenu, oldMenu)
+		results = ncurses.processmenu(nextMenu, eval(back_list_stack[(size - 2)]))
 		storeold = oldMenu
-	
+		back_list_stack.append(results)
+		
+		
+
 
 
 #curses.endwin() #Terminating ncurses application
+
+
+
+
+
