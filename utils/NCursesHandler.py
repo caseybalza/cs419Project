@@ -49,9 +49,9 @@ class NCursesHandler:
 		self.n = curses.A_NORMAL #n is the coloring for a non highlighted menu option
 
 	#Clears screen and outputs exit menu
-	def exit_window(self, new_menu, old_menu):
+	def exit_window(self, new_menu, location, old_menu):
 		self.stdscr.clear
-		self.processmenu(new_menu, old_menu)
+		self.processmenu(new_menu, location, old_menu)
 	#end exit_window
 
 	#closes program
@@ -61,11 +61,11 @@ class NCursesHandler:
 	#end exit_program
 
 	#Top Menu Bar
-	def top_bar_menu(self):
+	def top_bar_menu(self, location):
 		self.stdscr2.border(124, 124, 61, 61, 35, 35, 35, 35)
 		self.stdscr2.bkgd(' ', curses.color_pair(1))
-		self.stdscr2.addstr(1,2, 'SQL-Manager v1.0|')
-		self.stdscr2.addstr(1,21, 'Location:')
+		self.stdscr2.addstr(1,2, 'Location:')
+		self.stdscr2.addstr(1,11, location)
 		self.stdscr2.addstr(1,67, 'H', curses.A_UNDERLINE)
 		self.stdscr2.addstr(1,68, 'elp')
 		self.stdscr2.addstr(1,73, 'E', curses.A_UNDERLINE)
@@ -73,7 +73,7 @@ class NCursesHandler:
 		self.stdscr2.refresh()
 	#end top_menu_bar
 
-	def help_window(self, new_menu, old_menu):
+	def help_window(self, new_menu, location, old_menu):
 		
 		self.stdscr3.border(0)
 		self.stdscr3.bkgd(' ', curses.color_pair(8))
@@ -83,12 +83,13 @@ class NCursesHandler:
 		self.stdscr3.addstr(7,2, '"Shift + E" to exit program')
 		self.stdscr3.addstr(8,2, '"Shift + H" to to bring up help menu')
 		self.stdscr.refresh()
+		self.stdscr2.refresh()
 		self.stdscr3.refresh()
-		self.processmenu(new_menu, old_menu)
+		self.processmenu(new_menu, location, old_menu)
 	#end help_window
 
-	#properly loads form, returns values entered
-	def runform(self, form):
+	#properly loads form, ,returns values entered
+	def runform(self, form, location):
 
 		fieldcount = len(form['fields'])# how many fields there are in the form
 		optioncount = len(form['options'])# how many options there are
@@ -114,7 +115,7 @@ class NCursesHandler:
 		self.stdscr.refresh()
 
 		#top menu bar
-		self.top_bar_menu()
+		self.top_bar_menu(location)
 
 		#display options			
 
@@ -166,7 +167,7 @@ class NCursesHandler:
 
 
 	# This function displays the appropriate menu and returns the option selected
-	def runmenu(self, menu, parent, start):
+	def runmenu(self, menu, parent, start, location):
 
 		# work out what text to display as the last menu option
 		if parent is None:
@@ -195,7 +196,7 @@ class NCursesHandler:
 				self.stdscr.refresh()
 				
 				#top menu bar
-				self.top_bar_menu()
+				self.top_bar_menu(location)
 
 				# Display all the menu items, showing the 'pos' item highlighted
 				count = 0
@@ -273,23 +274,23 @@ class NCursesHandler:
 
 
 	# This function calls showmenu and then acts on the selected item
-	def processmenu(self, menu, parent=None):
+	def processmenu(self, menu, location, parent=None ):
 		optioncount = len(menu['options'])
 		start = 0
 		if menu['type'] == Dictionary.MENU:
 			while (1): #Loop until the user exits the menu
-				getin = self.runmenu(menu, parent, start)
+				getin = self.runmenu(menu, parent, start, location)
 				if getin == -1 or getin == optioncount:
 					return str(parent)
 				elif getin == 'exit': #if user input 'E' (shift + e) bring up exit menu
 					self.stdscr.clear()
 					saying = "No"
-					self.exit_window(exit_menu, saying) #open exit window
+					self.exit_window(exit_menu, "", saying) #open exit window
 					self.stdscr.clear()#Clear screen of exit menu if user did not exit
 				elif getin == 'help': #if user input 'E' (shift + e) bring up exit menu
 					self.stdscr.clear()
 					saying = "Close"
-					self.help_window(help_menu, saying) #open exit window
+					self.help_window(help_menu, "", saying) #open exit window
 					self.stdscr.clear()#Clear screen of exit menu if user did not exit
 				elif getin == -2:
 					start += 7
@@ -311,7 +312,7 @@ class NCursesHandler:
 					self.stdscr.clear() #clears previous screen on key press and updates display based on pos
 
 		else:
-			result = self.runform(menu)
+			result = self.runform(menu, location)
 			#return result['option']['command']
 			return result['option']['command']+str(result['fields'])+')'
 	#end processmenu()
@@ -328,7 +329,7 @@ class NCursesHandler:
 	
 	# Starts program with main menu
 	def startmenu(self):
-		return self.processmenu(main_menu, None)
+		return self.processmenu(main_menu, "", None)
 
 	def testfun(self):
 		self.stdscr.clear()
@@ -339,6 +340,8 @@ class NCursesHandler:
 
 	def resetscreen(self):
 		self.stdscr.clear()
+		self.stdscr2.clear()
 		self.stdscr.refresh()
+		self.stdscr2.refresh()
 	#end resetscreen()
 
