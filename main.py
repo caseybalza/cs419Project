@@ -15,38 +15,26 @@ from utils.DatabaseOrchestrator import DatabaseOrchestrator
 from utils.view import *
 from utils.initiateProgram import initiateProgram
 from utils.NCursesHandler import NCursesHandler
+from utils.Logger import get_logger
 
 #Check if everything needed is installed and correct version, continue with program, else halt.
 
 #stop = initiateProgram() #create instance of class initiateProgram
 #stop = stop.versionCheck() #call versionCheck on the instance.
 stop = 0
-	
+
 DB_Orchestrator = DatabaseOrchestrator()
 ncurses = NCursesHandler()
+logger = get_logger("Main")
 
-def show_table_contents(table, databaseType):
+def show_table_contents(table):
+        logger.info("Inside show_table_contents")
+        logger.info("Database selected is: {}".format(DB_Orchestrator.database))
         DB_Orchestrator.get_table_for_viewing(table)
-        #stdscr.clear()
-        #stdscr.refresh()
-        #schemaRow = curses.newwin(5, columns, 0, 0)
-        width = columns // 5
-        rowFormat = "%-{}s %-{}s %-{}s %-{}s %-{}s".format(width, width, width, width, width)
-        #schemaRow.addstr(1, 1, rowFormat % (tableContents[0][0][0], tableContents[0][1][0], tableContents[0][2][0], tableContents[0][3][0], tableContents[0][4][0]))
-        #schemaRow.refresh()
 
-        #for x in range(1, 20):
-            #itemRow = curses.newwin(3, columns, 5 + ((x - 1) * 2), 0)
-            #itemRow.addstr(1, 1, rowFormat % (tableContents[1][x][0], tableContents[1][x][1], tableContents[1][x][2], tableContents[1][x][3], tableContents[1][x][4]))
-            #itemRow.refresh()
-
-        #Put column names in first column
-        #stdscr.getch()
-
-def show_tables(dbs, databaseType):
+def show_tables(dbs):
+        logger.info("Inside show_tables")
         DB_Orchestrator.select_database(dbs)
-        #if databaseType == "PostgresSQL":
-        #    postgresSQL_DB_Orchestrator.select_database(dbs)
 
         dbs_menu = {
                 'title': dbs + " tables", 'type': Dictionary.MENU, 'subtitle': "Please select a table or action...",
@@ -54,17 +42,17 @@ def show_tables(dbs, databaseType):
         }#end of menu data
 
         tables = DB_Orchestrator.show_tables()
-        #tables = postgresSQL_DB_Orchestrator.show_tables()
 
         dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': Dictionary.COMMAND, 'command': 'testfun()' })
         for table in tables:
-                action = os.path.join('show_table_contents(\"{}\", \"{}\")'.format(table, databaseType))
+                action = os.path.join('show_table_contents(\"{}\")'.format(table))
                 dbs_menu['options'].append({'title': table, 'type': Dictionary.COMMAND, 'command': action, 'location': table })
         return dbs_menu
 #end show_tables(dbs)
 
 #Displays information from MySQL server
-def use_mysql(DB_Orchestrator, results):
+def use_mysql(results):
+        logger.info("Inside use_mysql")
 	#logininfo = eval(results)
 	logininfo = results
 	DB_Orchestrator.load("localhost", logininfo[0], logininfo[1], "", "MySQL")
@@ -75,12 +63,13 @@ def use_mysql(DB_Orchestrator, results):
 
         databases = DB_Orchestrator.show_databases()
         for database in databases:
-            action = os.path.join('show_tables(\"{}\", \"{}\")'.format(database, "MySQL"))
+            action = os.path.join('show_tables(\"{}\")'.format(database))
             mysql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action, 'location': database })
         return mysql_menu
 #end use_mysql()
 
-def use_psql(DB_Orchestrator, results):
+def use_psql(results):
+        logger.info("Inside use_psql")
 	DB_Orchestrator.load("", results[0], results[1], "postgres", "PostgresSQL")
         postgressql_menu = {
                 'title': "PostgresSQL databases", 'type': Dictionary.MENU, 'subtitle': "Please select a database to use...",
@@ -121,10 +110,11 @@ def mainFunction(screen):
 	location.append(nextMenu.get('location')) #Add part of path to location
 	storeold = results;
 	while 1:
-
+                logger.info(results)
 		size = len(back_list_stack)
 		oldMenu = nextMenu
 		nextMenu = eval(results)
+                logger.info(nextMenu)
 		location.append(nextMenu.get('location'))  #Add part of path to location
 		if nextMenu == storeold:
 			back_list_stack.pop()
@@ -136,7 +126,7 @@ def mainFunction(screen):
 		
 		str_location = ''.join(location) #convert list to string.
 
-		results = ncurses.processmenu(nextMenu, str_location, eval(back_list_stack[(size - 2)]))
+		results = ncurses.processmenu(nextMenu, str_location, oldMenu)
 		storeold = oldMenu
 		back_list_stack.append(results)
 		

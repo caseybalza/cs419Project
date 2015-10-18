@@ -1,6 +1,8 @@
 import MySQLdb
 import psycopg2
+import logging
 from DatabaseExceptions import *
+from Logger import get_logger
 
 class DatabaseOrchestrator:
 
@@ -10,6 +12,7 @@ class DatabaseOrchestrator:
         self.passwd = passwd
         self.database = database
         self.databaseType = databaseType
+        self.logger = get_logger("DatabaseOrchestrator")
         if databaseType == "MySQL":
             self.connectedDB = MySQLdb.connect(host, user, passwd, database)
         elif databaseType == "PostgresSQL":
@@ -20,15 +23,18 @@ class DatabaseOrchestrator:
         self.cursor = self.connectedDB.cursor()
        
     def show_tables(self):
+        self.logger.info("Inside show_tables, databaseType: {}".format(self.databaseType))
         if self.databaseType == "MySQL":
             try:
                 self.cursor.execute("SHOW TABLES")
             except:
+                self.logger.error(logging.exception("MySQL - Select tables error"))
                 raise DatabaseCursorError("MySQL - SHOW TABLES error")
         elif self.databaseType == "PostgresSQL":
             try:
                 self.cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'")
             except:
+                self.logger.error(logging.exception("PostgresSQL - Select tables error"))
                 raise DatabaseCursorError("PostgresSQL - Select tables error")
         else:
             raise DatabaseTypeError(self.databaseType)
@@ -56,7 +62,8 @@ class DatabaseOrchestrator:
                 self.database = database
                 return "Successfully selected database"
             except:
-                return "Failed to select database"
+                self.logger.error(logging.exception("MySQL - Select database error"))
+                raise DatabaseError(self.database)
         elif self.databaseType == "PostgresSQL":
             try:
                 self.database = database
@@ -64,7 +71,8 @@ class DatabaseOrchestrator:
                 self.cursor = self.connectedDB.cursor()
                 return "Successfully selected database"
             except:
-                return "Failed to select database"
+                self.logger.error(logging.exception("PostgresSQL - Select database error"))
+                raise DatabaseError(self.database)
         else:
             raise DatabaseTypeError(self.databaseType)
 
@@ -76,6 +84,7 @@ class DatabaseOrchestrator:
             for tupleResult in self.cursor.fetchall():
                 results.append(tupleResult)
         except:
+            self.logger.error(logging.exception("MySQL&PostgresSQL - Query database error"))
             raise DatabaseCursorError("Database query failed")
         return results
 
@@ -87,14 +96,16 @@ class DatabaseOrchestrator:
                 for column in self.cursor.fetchall():
                     tableSchema.append(column[:2])
             except:
-                DatabaseCursorError("MySQL - Get table schema error")
+                self.logger.error(logging.exception("MySQL - Get table schema error"))
+                raise DatabaseCursorError("MySQL - Get table schema error")
         if self.databaseType == "PostgresSQL":
             try:
                 self.cursor.execute("SELECT column_name, data_type, character_maximum_length FROM information_schema.columns WHERE table_name = \'{}\'".format(table))
                 for column in self.cursor.fetchall():
                     tableSchema.append(column[:3])
             except:
-                DatabaseCursorError("PostgresSQL - Get table schema error")
+                self.logger.error(logging.exception("PostgresSQL - Get table schema error"))
+                raise DatabaseCursorError("PostgresSQL - Get table schema error")
         return tableSchema
 
     def get_table_for_viewing(self, table):

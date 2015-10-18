@@ -321,9 +321,9 @@ class NCursesHandler:
 		form = login_form
 		function = None
 		if type == 0:
-			function = 'use_mysql(DB_Orchestrator, '
+			function = 'use_mysql('
 		elif type == 1:
-			function = 'use_psql(DB_Orchestrator, '
+			function = 'use_psql('
 		form['options'][1]['command'] = function
 		return form
 	
