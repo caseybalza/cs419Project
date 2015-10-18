@@ -6,31 +6,28 @@ class Dictionary:
 	TEXT = "text"
 
 main_menu = {
-	'title': "Main Menu", 'type': Dictionary.MENU, 'subtitle': "Please select an option...",
+	'title': "Main Menu", 'type': Dictionary.MENU, 'subtitle': "Please select an option...", 'location': '/',
 	'options':[
   		{ 'title': "Use MySQL databases", 'type': Dictionary.COMMAND, 'command': 'login(0)' },
-    	{ 'title': "Use PostgreSQL databases", 'type': Dictionary.COMMAND, 'command': 'login(1)' },
+    	{ 'title': "Use PostgreSQL databases", 'type': Dictionary.COMMAND, 'command': 'login(1)' }
 	#{ 'title': "Login Test", 'type': Dictionary.COMMAND, 'command': 'login(ncurses)' },
-		#Menu with a submenu
-        { 'title': "Sebmenu preview", 'type': Dictionary.MENU, 'subtitle': "Please select an option...",
-        	'options': [
-        		{ 'title': "Option1", 'type': Dictionary.COMMAND, 'command': 'testfun()' },
-          		{ 'title': "Option2", 'type': Dictionary.COMMAND, 'command': 'testfun()' },
-          		{ 'title': "Option3", 'type': Dictionary.COMMAND, 'command': 'testfun()' },
-			]#end submenu
-        }
   ]#end of menu options
 }#end of menu data
 
 exit_menu = {
-	'title': "Exit program?", 'type': Dictionary.MENU, 'subtitle': "Please select an action...",
+	'title': "Exit program?", 'type': Dictionary.MENU, 'subtitle': "Please select an action...", 'location': '',
 	'options':[
-  		{ 'title': "Yes", 'type': Dictionary.COMMAND, 'command': 'exit_program(ncurses)' },
+  		{ 'title': "Yes", 'type': Dictionary.COMMAND, 'command': 'EXIT' },
   ]#end of exit_menu options
 }#end of exit_menu data
 
+help_menu = {
+	'title': "HELP MENU", 'type': Dictionary.MENU, 'subtitle': "", 'location': '',
+	'options':[]#end of exit_menu options
+}#end of exit_menu data
+
 login_form = {
-	'title': "Login", 'type': Dictionary.FORM, 'subtitle': "Please login to your db account",
+	'title': "Login", 'type': Dictionary.FORM, 'subtitle': "Please login to your db account", 'location': '',
 	'fields':[
 		{'title': "Username: ", 'type': Dictionary.TEXT},
 		{'title': "Password: ", 'type': Dictionary.TEXT}

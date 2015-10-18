@@ -16,43 +16,17 @@ from utils.view import *
 from utils.initiateProgram import initiateProgram
 from utils.NCursesHandler import NCursesHandler
 
-
 #Check if everything needed is installed and correct version, continue with program, else halt.
-stop = initiateProgram() #create instance of class initiateProgram
-stop = stop.versionCheck() #call versionCheck on the instance.
+
+#stop = initiateProgram() #create instance of class initiateProgram
+#stop = stop.versionCheck() #call versionCheck on the instance.
+stop = 0
 	
-#clears screen and outputs exit menu
-def exit_window(new_menu, old_menu):
-	stdscr.clear
-	processmenu(new_menu, old_menu)
-#end exit_window
-
-#closes program
-def exit_program():
-	curses.endwin() #Terminating ncurses application
-	sys.exit()
-#end exit_program()
-
-######################## MENU FUNCTIONS #######################################################
-# Source to help create menus http://blog.skeltonnetworks.com/2010/03/python-curses-custom-menu/
-
-
-
-################### END OF MENU FUNCTIONS #######################################################
-
-#Test function
-#def testfun():
-	#stdscr.clear()
-	#stdscr.refresh()
-	#stdscr.addstr(2,2, "WORKING", curses.A_STANDOUT)
-	#stdscr.getch()
-#end testfun()
+DB_Orchestrator = DatabaseOrchestrator()
+ncurses = NCursesHandler()
 
 def show_table_contents(table, databaseType):
-        if databaseType == "MySQL":
-            tableContents = mySQL_DB_Orchestrator.get_table_for_viewing(table)
-        if databaseType == "PostgresSQL":
-            tableContents = postgresSQL_DB_Orchestrator.get_table_for_viewing(table)
+        DB_Orchestrator.get_table_for_viewing(table)
         #stdscr.clear()
         #stdscr.refresh()
         #schemaRow = curses.newwin(5, columns, 0, 0)
@@ -76,7 +50,7 @@ def show_tables(dbs, databaseType):
 
         dbs_menu = {
                 'title': dbs + " tables", 'type': Dictionary.MENU, 'subtitle': "Please select a table or action...",
-                'options':[]#end of menu options
+                'location': dbs,'options':[]#end of menu options
         }#end of menu data
 
         tables = DB_Orchestrator.show_tables()
@@ -85,7 +59,7 @@ def show_tables(dbs, databaseType):
         dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': Dictionary.COMMAND, 'command': 'testfun()' })
         for table in tables:
                 action = os.path.join('show_table_contents(\"{}\", \"{}\")'.format(table, databaseType))
-                dbs_menu['options'].append({'title': table, 'type': Dictionary.COMMAND, 'command': action })
+                dbs_menu['options'].append({'title': table, 'type': Dictionary.COMMAND, 'command': action, 'location': table })
         return dbs_menu
 #end show_tables(dbs)
 
@@ -96,13 +70,13 @@ def use_mysql(DB_Orchestrator, results):
 	DB_Orchestrator.load("localhost", logininfo[0], logininfo[1], "", "MySQL")
 	mysql_menu = {
 		'title': "MySql databases", 'type': Dictionary.MENU, 'subtitle': "Please select a database to use...",
-		'options':[]#end of menu options
+		'location': 'MySQL/', 'options':[]#end of menu options
 	}#end of menu data
 
         databases = DB_Orchestrator.show_databases()
         for database in databases:
             action = os.path.join('show_tables(\"{}\", \"{}\")'.format(database, "MySQL"))
-            mysql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action })
+            mysql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action, 'location': database })
         return mysql_menu
 #end use_mysql()
 
@@ -110,13 +84,13 @@ def use_psql(DB_Orchestrator, results):
 	DB_Orchestrator.load("", results[0], results[1], "postgres", "PostgresSQL")
         postgressql_menu = {
                 'title': "PostgresSQL databases", 'type': Dictionary.MENU, 'subtitle': "Please select a database to use...",
-                'options':[]#end of menu options
+                'location': 'PSQL/', 'options':[]#end of menu options
         }#end of menu data
 
         databases = DB_Orchestrator.show_databases()
         for database in databases:
             action = os.path.join('show_tables(\"{}\", \"{}\")'.format(database, "PostgresSQL"))
-            postgressql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action})
+            postgressql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action, 'location': database})
         return postgressql_menu
 #end use_psql()
 
@@ -131,31 +105,48 @@ def login(type):
 	return ncurses.setuplogin(type)
 	#return login_form
 
-#MAIN PROGRAM
-if stop == 0:
+def mainFunction(screen): 
+    #MAIN PROGRAM
 
-	#mySQL_DB_Orchestrator = DatabaseOrchestrator("localhost", "root", "password", "", "MySQL")
-	#postgresSQL_DB_Orchestrator = DatabaseOrchestrator("", "ubuntu", "", "postgres", "PostgresSQL")
-	DB_Orchestrator = DatabaseOrchestrator()
-	#rows, columns = os.popen('stty size', 'r').read().split()
-	#rows = int(rows)
-	#columns = int(columns)
+    if stop == 0:
 	#processmenu(main_menu)
-	ncurses = NCursesHandler()
 	results=ncurses.startmenu()
+	back_list_stack = [] #Create a stack to hold path
+	location = [] #Holds path user has taken inside sql servers
+	back_list_stack.append(results) #Add main menu to path
 	nextMenu = eval(results)
 	ncurses.resetscreen()
-	results = ncurses.processmenu(nextMenu)
-	storeold = None
+	results = ncurses.processmenu(nextMenu, "")
+	back_list_stack.append(results)#Add option selected from Main menu to path
+	location.append(nextMenu.get('location')) #Add part of path to location
+	storeold = results;
 	while 1:
+
+		size = len(back_list_stack)
 		oldMenu = nextMenu
 		nextMenu = eval(results)
+		location.append(nextMenu.get('location'))  #Add part of path to location
 		if nextMenu == storeold:
-			oldMenu = -1
+			back_list_stack.pop()
+			back_list_stack.pop()
+			location.pop()
+			location.pop()
+			size = len(back_list_stack)
 		ncurses.resetscreen()
-		results = ncurses.processmenu(nextMenu, oldMenu)
-		storeold = oldMenu
-	
+		
+		str_location = ''.join(location) #convert list to string.
 
+		results = ncurses.processmenu(nextMenu, str_location, eval(back_list_stack[(size - 2)]))
+		storeold = oldMenu
+		back_list_stack.append(results)
+		
+
+
+curses.wrapper(mainFunction)
 
 #curses.endwin() #Terminating ncurses application
+
+
+
+
+
