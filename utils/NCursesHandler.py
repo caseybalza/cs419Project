@@ -6,8 +6,9 @@ import subprocess
 import sys
 import time
 import curses.textpad
+import pprint
 from utils.view import *
-
+from math import ceil
 
 
 class NCursesHandler:
@@ -317,6 +318,121 @@ class NCursesHandler:
 			return result['option']['command']+str(result['fields'])+')'
 	#end processmenu()
 	
+        def draw_table(self, tableName, contents):
+                tableScr = curses.initscr()
+                tableScr.keypad(1)
+                tableScr.border(0)
+                curses.init_pair(20, curses.COLOR_BLACK, curses.COLOR_CYAN)
+                highlightText = curses.color_pair(20)
+                normalText = curses.A_NORMAL
+                schema = contents[0]
+                records = contents[1]
+                numCols = len(schema)
+                numRows = len(records)
+                maxEntitiesOnPage = 10
+
+                box = curses.newwin(maxEntitiesOnPage + 4, 80, 1, 1)
+                box.box()
+                box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
+                box.addstr(2, 2, "{:>16.16}".format(""), curses.A_UNDERLINE)
+                box.addstr(2, 18, "{:>20.16}".format(schema[0][0] if numCols > 0 else ""), curses.A_UNDERLINE)
+                box.addstr(2, 38, "{:>20.16}".format(schema[1][0] if numCols > 1 else ""), curses.A_UNDERLINE)
+                box.addstr(2, 58, "{:>20.16}".format(schema[2][0] if numCols > 2 else ""), curses.A_UNDERLINE)
+
+                pages =  int(ceil(numRows / maxEntitiesOnPage))
+                rowPosition = 1
+                columnPosition = 0
+                page = 1
+                for i in range(1, maxEntitiesOnPage + 1):
+                    if i == rowPosition:
+                        textType = highlightText
+                    else:
+                        textType = normalText
+
+                    box.addstr(i + 2, 2, str(i) + " - ", textType)
+
+                    for j in range(0, 3):
+                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 18 + (20 * j), "{:>20.16}".format(
+                            str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
+
+                    if i == numRows:
+                        break
+                
+                tableScr.refresh()
+                box.refresh()
+
+                x = tableScr.getch()
+                while x != 69:
+                    if x == curses.KEY_DOWN:
+                        if page == 1:
+                            if rowPosition < i:
+                                rowPosition += 1
+                            else:
+                                if pages > 1:
+                                    page += 1
+                                    rowPosition = 1 + (maxEntitiesOnPage * (page - 1))
+                        elif page == pages + 1:
+                            if rowPosition < numRows:
+                                rowPosition += 1
+                        else:
+                            if rowPosition < maxEntitiesOnPage + (maxEntitiesOnPage * (page - 1)):
+                                rowPosition += 1
+                            else:
+                                page += 1
+                                rowPosition = 1 + (maxEntitiesOnPage * (page - 1))
+                    if x == curses.KEY_UP:
+                        if page == 1:
+                            if rowPosition > 1:
+                                rowPosition -= 1
+                        else:
+                            if rowPosition> (1 + (maxEntitiesOnPage * (page - 1))):
+                                rowPosition -= 1
+                            else:
+                                page -= 1
+                                rowPosition = maxEntitiesOnPage + (maxEntitiesOnPage * (page - 1))
+                    if x == curses.KEY_LEFT:
+                        if columnPosition > 0:
+                            columnPosition -= 1
+                    if x == curses.KEY_RIGHT:
+                        if columnPosition < numCols - 3:
+                            columnPosition += 1
+                    if x == ord("\n") and numRows != 0:
+                        tableScr.erase()
+                        tableScr.border(0)
+                        #Item selected, does nothing currently
+
+                    box.erase()
+                    tableScr.border(0)
+                    box.border(0)
+
+
+                    box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
+                    box.addstr(2, 2, "{:>16.16}".format(""), curses.A_UNDERLINE)
+                    for i in range(0, 3):
+                        box.addstr(2, 18 + (20 * i), "{:>20.16}".format(schema[i + columnPosition][0] if numCols > i + columnPosition else ""), curses.A_UNDERLINE)
+
+                    for i in range(1 + (maxEntitiesOnPage * (page - 1)), maxEntitiesOnPage + 1 + (maxEntitiesOnPage * (page - 1))):
+                        if (i + (maxEntitiesOnPage * (page - 1)) == rowPosition + (maxEntitiesOnPage * (page - 1))):
+                            textType = highlightText
+                        else:
+                            textType = normalText
+
+                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 2, str(i) + " - ", textType)
+
+                        
+                        for j in range(0, 3):
+                            box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 18 + (20 * j), "{:>20.16}".format(
+                                str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
+
+                        if i == numRows:
+                            break
+
+                    tableScr.refresh()
+                    box.refresh()
+                    x = tableScr.getch()
+
+                curses.endwin()
+                
 	def setuplogin(self, type):
 		form = login_form
 		function = None

@@ -44,6 +44,7 @@ class DatabaseOrchestrator:
         return tableList
 
     def show_databases(self):
+        self.logger.info("Inside show_databases, databaseType: {}".format(self.databaseType))
         if self.databaseType == "MySQL":
             self.cursor.execute("SHOW DATABASES")
         elif self.databaseType == "PostgresSQL":
@@ -56,6 +57,7 @@ class DatabaseOrchestrator:
         return databaseList
 
     def select_database(self, database):
+        self.logger.info("Inside select_database, database: {}".format(database))
         if self.databaseType == "MySQL":
             try:
                 self.cursor.execute("USE " + database)
@@ -77,6 +79,7 @@ class DatabaseOrchestrator:
             raise DatabaseTypeError(self.databaseType)
 
     def query_database(self, query):
+        self.logger.info("Inside query_database, query: {}".format(query))
         results = []
         try:
             self.cursor.execute(query)
@@ -89,6 +92,7 @@ class DatabaseOrchestrator:
         return results
 
     def get_table_schema(self, table):
+        self.logger.info("Inside get_table_schema, table: {}".format(table))
         tableSchema = []
         if self.databaseType == "MySQL":
             try:
@@ -109,6 +113,7 @@ class DatabaseOrchestrator:
         return tableSchema
 
     def get_table_for_viewing(self, table):
+        self.logger.info("Inside get_table_for_viewing, table: {}".format(table))
         printableTable = []
 
         printableTable.append(self.get_table_schema(table))

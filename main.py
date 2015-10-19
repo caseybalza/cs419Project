@@ -30,7 +30,11 @@ logger = get_logger("Main")
 def show_table_contents(table):
         logger.info("Inside show_table_contents")
         logger.info("Database selected is: {}".format(DB_Orchestrator.database))
-        DB_Orchestrator.get_table_for_viewing(table)
+        tableContents = DB_Orchestrator.get_table_for_viewing(table)
+        logger.info("Displaying the {} table".format(table))
+        ncurses.draw_table(table, tableContents)
+
+        return None
 
 def show_tables(dbs):
         logger.info("Inside show_tables")
@@ -78,7 +82,7 @@ def use_psql(results):
 
         databases = DB_Orchestrator.show_databases()
         for database in databases:
-            action = os.path.join('show_tables(\"{}\", \"{}\")'.format(database, "PostgresSQL"))
+            action = os.path.join('show_tables(\"{}\")'.format(database))
             postgressql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action, 'location': database})
         return postgressql_menu
 #end use_psql()
@@ -114,6 +118,8 @@ def mainFunction(screen):
 		size = len(back_list_stack)
 		oldMenu = nextMenu
 		nextMenu = eval(results)
+                if nextMenu is None:
+                    nextMenu = oldMenu
                 logger.info(nextMenu)
 		location.append(nextMenu.get('location'))  #Add part of path to location
 		if nextMenu == storeold:
