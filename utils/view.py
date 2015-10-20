@@ -34,6 +34,6 @@ login_form = {
 	],
 	'options': [
 		{'title': "Back", 'type': Dictionary.COMMAND, 'command': str(main_menu)},
-		{'title': "Continue", 'type': Dictionary.COMMAND, 'command': 'use_mysql()'}
+		{'title': "Continue", 'type': Dictionary.COMMAND, 'command': ''}
 	]
 }
