@@ -106,13 +106,14 @@ def mainFunction(screen):
 	results=ncurses.startmenu()
 	back_list_stack = [] #Create a stack to hold path
 	location = [] #Holds path user has taken inside sql servers
-	back_list_stack.append(results) #Add main menu to path
+	#back_list_stack.append(results) #Add main menu to path
 	nextMenu = eval(results)
+	back_list_stack.append(nextMenu)
 	ncurses.resetscreen()
-	results = ncurses.processmenu(nextMenu, "")
-	back_list_stack.append(results)#Add option selected from Main menu to path
+	results = ncurses.processmenu(nextMenu, 'Login')
+	#back_list_stack.append(results)#Add option selected from Main menu to path
 	location.append(nextMenu.get('location')) #Add part of path to location
-	storeold = results;
+	storeold = None;
 	while 1:
                 logger.info(results)
 		size = len(back_list_stack)
@@ -124,8 +125,13 @@ def mainFunction(screen):
 		location.append(nextMenu.get('location'))  #Add part of path to location
 		if nextMenu == storeold:
 			back_list_stack.pop()
-			back_list_stack.pop()
-			location.pop()
+			if size >= 2:
+				back_list_stack.pop()
+				location.pop()
+			if size > 2:
+				oldMenu = back_list_stack[-1]
+			else:
+				oldMenu = None
 			location.pop()
 			size = len(back_list_stack)
 		ncurses.resetscreen()
@@ -134,7 +140,7 @@ def mainFunction(screen):
 
 		results = ncurses.processmenu(nextMenu, str_location, oldMenu)
 		storeold = oldMenu
-		back_list_stack.append(results)
+		back_list_stack.append(nextMenu)
 		
 
 
