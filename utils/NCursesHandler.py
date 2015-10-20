@@ -312,7 +312,7 @@ class NCursesHandler:
 					self.stdscr.clear() #clears previous screen on key press and updates display based on pos
 
 		else:
-			result = self.runform(menu, location)
+			result = self.runform(menu, menu['location'])
 			#return result['option']['command']
 			return result['option']['command']+str(result['fields'])+')'
 	#end processmenu()
@@ -322,8 +322,10 @@ class NCursesHandler:
 		function = None
 		if type == 0:
 			function = 'use_mysql(DB_Orchestrator, '
+			form['location'] = 'MySQL Login'
 		elif type == 1:
 			function = 'use_psql(DB_Orchestrator, '
+			form['location'] = 'PostgreSQL Login'
 		form['options'][1]['command'] = function
 		return form
 	
