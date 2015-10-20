@@ -90,7 +90,7 @@ class NCursesHandler:
 	#end help_window
 
 	#properly loads form, ,returns values entered
-	def runform(self, form, location):
+	def runform(self, form, location, parent):
 
 		fieldcount = len(form['fields'])# how many fields there are in the form
 		optioncount = len(form['options'])# how many options there are
@@ -100,6 +100,8 @@ class NCursesHandler:
 		x = None
 		optionselect = 0
 		results = []
+		wins = []
+		boxs = []
 		returnvalue = {'fields':None, 'option':None}
 		# Display all fields
 
@@ -131,15 +133,28 @@ class NCursesHandler:
 
 		for index in range(fieldcount):
 			if form['fields'][index]['type'] == Dictionary.TEXT:
-				win = curses.newwin(1,30,5+index,20+len(form['fields'][index]['title']))
-				tb = curses.textpad.Textbox(win)
+				next = index
+				if len(boxs) <= index:
+					wins.append(curses.newwin(1,30,5+index,20+len(form['fields'][index]['title'])))
+					boxs.append(curses.textpad.Textbox(wins[index]))
 				text = None
 				def check(input):
-					if input == 13:
-						tb.gather()
-				tb.do_command(check)
-				text = tb.edit()
-				results.append(text.strip())
+					if input == 14:
+						boxs[index].gather()
+					if input == curses.KEY_DOWN:
+						boxs[index].gather()
+					if input == curses.KEY_UP:
+						next -= 2
+						boxs[index].gather()
+				#boxs[index].do_command(check)
+				text = boxs[index].edit()
+				if len(results)>index:
+					results[index] = text.strip()
+				else:
+					results.append(text.strip())
+				index = next
+			else:
+				boxs.append(None)
 		sys.stdout.flush()
 		while x !=ord('\n'):
 			if pos != oldpos:
@@ -161,9 +176,16 @@ class NCursesHandler:
 					pos -= 1
 				else:
 					pos = optioncount -1
-		returnvalue['fields'] = results
-		returnvalue['option'] = form['options'][pos]
-		return returnvalue
+			elif x == 69:
+				return 'exit'
+			elif x == 72:
+				return 'help'
+		if pos is 0:
+			return str(parent)
+		else:
+			#returnvalue['fields'] = results
+			#returnvalue['option'] = form['options'][pos]
+			return form['options'][pos]['command']+str(results)+')'
 
 
 
@@ -313,9 +335,24 @@ class NCursesHandler:
 					self.stdscr.clear() #clears previous screen on key press and updates display based on pos
 
 		else:
-			result = self.runform(menu, location)
+			if parent is None:
+				parent = main_menu
+			while (1):
+				getin = self.runform(menu, location, parent)
+				if getin == 'help':
+					self.stdscr.clear()
+					saying = "Close"
+					self.help_window(help_menu, "", saying)
+					self.stdscr.clear()
+				elif getin == 'exit':
+					self.stdscr.clear()
+					saying = "No"
+					self.exit_window(exit_menu, "", saying)
+					self.stdscr.clear()
+				else:
+					return getin
 			#return result['option']['command']
-			return result['option']['command']+str(result['fields'])+')'
+			#return result['option']['command']+str(result['fields'])+')'
 	#end processmenu()
 	
         def draw_table(self, tableName, contents):
