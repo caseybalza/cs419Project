@@ -113,9 +113,10 @@ def login(type):
 
 def createDB(results):
 	ncurses.stdscr.clear()
+	ncurses.stdscr2.clear()
+	ncurses.stdscr3.clear()
 	results[0] = DB_Orchestrator.create_database(results[0]) #results is a list so pass in first index which is the new databases name.
 	ncurses.createDB_window(createDB_menu, "", "Close", results) #open exit window
-	ncurses.stdscr.clear()#Clear screen of exit menu if user did not exit
 
 #Used to load form to get name of new database to create and calls createMySQLdb()
 def loadDB_createform():

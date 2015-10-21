@@ -131,7 +131,11 @@ class DatabaseOrchestrator:
                 return "ERROR! Check if duplicate name or spaces"
         elif self.databaseType == "PostgresSQL":
             try:
-                self.cursor.execute("createdb " + results) #Create a new database in MySQL server
+                con = psycopg2.connect(dbname='postgres', user=self.user, host=self.host, password=self.passwd)
+                con.autocommit = True
+                cur = con.cursor()
+                cur.execute("CREATE DATABASE " + results)
+                con.close()
                 return results
             except:
                 return "ERROR! Check if duplicate name or spaces"
