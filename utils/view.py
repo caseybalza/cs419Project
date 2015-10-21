@@ -24,7 +24,14 @@ exit_menu = {
 help_menu = {
 	'title': "HELP MENU", 'type': Dictionary.MENU, 'subtitle': "", 'location': '',
 	'options':[]#end of exit_menu options
-}#end of exit_menu data
+}#end of help_menu data
+
+createDB_menu = {
+	'title': "Create New Database", 'type': Dictionary.MENU, 'subtitle': "", 'location': '',
+	'options':[
+
+	]#end of createDB_menu_menu options
+}#end of createDB_menu data
 
 login_form = {
 	'title': "Login", 'type': Dictionary.FORM, 'subtitle': "Please login to your db account", 'location': '',
@@ -34,6 +41,17 @@ login_form = {
 	],
 	'options': [
 		{'title': "Back", 'type': Dictionary.COMMAND, 'command': str(main_menu)},
+		{'title': "Continue", 'type': Dictionary.COMMAND, 'command': ''}
+	]
+}
+
+createDB_form = {
+	'title': "Create New Database", 'type': Dictionary.FORM, 'subtitle': "Please enter the name of your new database to create", 'location': '',
+	'fields':[
+		{'title': "New Database Name: ", 'type': Dictionary.TEXT}
+	],
+	'options': [
+		{'title': "Back"},
 		{'title': "Continue", 'type': Dictionary.COMMAND, 'command': ''}
 	]
 }

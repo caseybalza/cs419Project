@@ -89,6 +89,19 @@ class NCursesHandler:
 		self.processmenu(new_menu, location, old_menu)
 	#end help_window
 
+	def createDB_window(self, new_menu, location, old_menu, results):
+		self.stdscr.clear
+		self.stdscr3.border(0)
+		self.stdscr3.bkgd(' ', curses.color_pair(8))
+		self.stdscr3.addstr(3,2, 'Redirecting you back to Main Menu')
+		self.stdscr3.addstr(10,2, results[0])
+		self.stdscr.refresh()
+		self.stdscr2.refresh()
+		self.stdscr3.refresh()
+		self.stdscr.clear
+		self.processmenu(new_menu, location, old_menu)
+	#end createDB_window
+
 	#properly loads form, ,returns values entered
 	def runform(self, form, location, parent):
 
