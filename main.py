@@ -64,12 +64,19 @@ def use_mysql(results):
 		'title': "MySql databases", 'type': Dictionary.MENU, 'subtitle': "Please select a database to use...",
 		'location': 'MySQL/', 'options':[]#end of menu options
 	}#end of menu data
+	
+	#Add Create Database option to top of menu
+	mysql_menu['options'].append({ 'title': "Create Database", 'type': Dictionary.COMMAND, 'command': 'createMySQLdb', 'location': "createDB" })
+
+	#Add Import Database option to top of menu
+	mysql_menu['options'].append({ 'title': "Import Database", 'type': Dictionary.COMMAND, 'command': 'importMySQLdb', 'location': "importDB" })
 
         databases = DB_Orchestrator.show_databases()
         for database in databases:
             action = os.path.join('show_tables(\"{}\")'.format(database))
-            mysql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action, 'location': database })
-        return mysql_menu
+            mysql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action, 'location': database})
+	
+	return mysql_menu
 #end use_mysql()
 
 def use_psql(results):
@@ -79,6 +86,12 @@ def use_psql(results):
                 'title': "PostgresSQL databases", 'type': Dictionary.MENU, 'subtitle': "Please select a database to use...",
                 'location': 'PSQL/', 'options':[]#end of menu options
         }#end of menu data
+
+	#Add Create Database option to top of menu
+	postgressql_menu['options'].append({ 'title': "Create Database", 'type': Dictionary.COMMAND, 'command': 'createPSQLdb', 'location': "createDB" })
+
+	#Add Import Database option to top of menu
+	postgressql_menu['options'].append({ 'title': "Import Database", 'type': Dictionary.COMMAND, 'command': 'importPSQLdb', 'location': "importDB" })
 
         databases = DB_Orchestrator.show_databases()
         for database in databases:
