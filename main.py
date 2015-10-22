@@ -43,7 +43,7 @@ def show_tables(dbs):
 
 	dbs_menu = {
 	'title': dbs + " tables", 'type': Dictionary.MENU, 'subtitle': "Please select a table or action...",
-	'location': dbs,'options':[]#end of menu options
+	'location': "", 'options':[]#end of DB_options_menu#end of menu options
 	}#end of menu data
 
 	tables = DB_Orchestrator.show_tables()
@@ -54,6 +54,21 @@ def show_tables(dbs):
 		dbs_menu['options'].append({'title': table, 'type': Dictionary.COMMAND, 'command': action, 'location': table })
 	return dbs_menu
 #end show_tables(dbs)
+
+def show_db_options(dbs):
+	logger.info("Inside show_db_options")
+	viewtables = os.path.join('show_tables(\"{}\")'.format(dbs))
+	db_options_menu = {
+	'title': dbs + " Database Options", 'type': Dictionary.MENU, 'subtitle': "Please select an action...",
+	'location': dbs,'options':[
+				{ 'title': "View Tables", 'type': Dictionary.COMMAND, 'command': viewtables },
+				{ 'title': "Delete database", 'type': Dictionary.COMMAND, 'command': '' },
+				{ 'title': "Export database", 'type': Dictionary.COMMAND, 'command': '' }
+			]#end of DB_options_menu
+	}#DB_options_menu
+	
+	return db_options_menu
+#end show_db_options(dbs)
 
 #Displays information from MySQL server
 def use_mysql(results):
@@ -74,7 +89,7 @@ def use_mysql(results):
 
 	databases = DB_Orchestrator.show_databases()
 	for database in databases:
-		action = os.path.join('show_tables(\"{}\")'.format(database))
+		action = os.path.join('show_db_options(\"{}\")'.format(database))
 		mysql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action, 'location': database})
 	
 	return mysql_menu
