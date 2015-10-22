@@ -230,6 +230,7 @@ class NCursesHandler:
 		oldpos=None # used to prevent the screen being redrawn every time
 		x = None #control for while loop, let's you scroll through options until return key is pressed then returns pos to program
 		         # Loop until return key is pressed
+		back = False # used for BACK menu option
 		while x !=ord('\n'):
 			if pos != oldpos:
 				oldpos = pos
@@ -262,6 +263,7 @@ class NCursesHandler:
 				if start >= 7:
 					self.stdscr.addstr(8+count,20, "%d - %s" % (count+1, "BACK"), textstyle)
 					count += 1
+					back = True
 			
 				# Now display Exit/Return at bottom of menu
 				if lastoption != 0 and lastoption != "Close":
@@ -313,7 +315,7 @@ class NCursesHandler:
 			return -1
 		elif pos == 7:
 			return -2
-		elif pos == 8 or pos == count - 1:
+		elif pos == 8 and back == True or pos == count - 1 and back == True:
 			return -3
 		else:
 			pos += start
