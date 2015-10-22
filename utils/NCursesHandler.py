@@ -254,9 +254,12 @@ class NCursesHandler:
 						count += 1
 
 					elif count == 7:
-						self.stdscr.addstr(8+count,20, "%d - %s" % (count+1, "MORE"), textstyle)				
+						self.stdscr.addstr(8+count,20, "%d - %s" % (count+1, "MORE"), textstyle)
 						count += 1
-
+					
+				if start >= 7:
+					self.stdscr.addstr(8+count,20, "%d - %s" % (count+1, "BACK"), textstyle)
+					count += 1
 			
 				# Now display Exit/Return at bottom of menu
 				if lastoption != 0 and lastoption != "Close":
@@ -304,10 +307,12 @@ class NCursesHandler:
 				pos = 'help'
 				return pos
 		# return index of the selected item
-		if pos == 8 or pos == optioncount:
+		if pos == 9 or pos == optioncount or pos == count:
 			return -1
 		elif pos == 7:
 			return -2
+		elif pos == 8 or pos == count - 1:
+			return -3
 		else:
 			pos += start
 
@@ -336,6 +341,9 @@ class NCursesHandler:
 					self.stdscr.clear()#Clear screen of exit menu if user did not exit
 				elif getin == -2:
 					start += 7
+					self.stdscr.clear()
+				elif getin == -3:
+					start -= 7
 					self.stdscr.clear()
 				elif menu['options'][getin]['type'] == Dictionary.COMMAND:
 					curses.def_prog_mode()    # save curent curses environment
