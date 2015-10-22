@@ -111,7 +111,7 @@ def use_psql(results):
 
 	databases = DB_Orchestrator.show_databases()
 	for database in databases:
-		action = os.path.join('show_tables(\"{}\")'.format(database))
+		action = os.path.join('show_db_options(\"{}\")'.format(database))
 		postgressql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action, 'location': database})
 	return postgressql_menu
 #end use_psql()
