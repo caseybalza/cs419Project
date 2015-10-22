@@ -119,3 +119,23 @@ class DatabaseOrchestrator:
         printableTable.append(self.get_table_schema(table))
         printableTable.append(self.query_database("Select * from " + table))
         return printableTable
+
+    def create_database(self, results):
+        pass
+        self.logger.info("Inside create_database, databaseType: {}".format(self.databaseType))
+        if self.databaseType == "MySQL":
+            try:
+                self.cursor.execute("CREATE DATABASE " + results) #Create a new database in MySQL server
+                return results
+            except:
+                return "ERROR! Check if duplicate name or spaces"
+        elif self.databaseType == "PostgresSQL":
+            try:
+                con = psycopg2.connect(dbname='postgres', user=self.user, host=self.host, password=self.passwd)
+                con.autocommit = True
+                cur = con.cursor()
+                cur.execute("CREATE DATABASE " + results)
+                con.close()
+                return results
+            except:
+                return "ERROR! Check if duplicate name or spaces"
