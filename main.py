@@ -16,6 +16,7 @@ from utils.view import *
 from utils.initiateProgram import initiateProgram
 from utils.NCursesHandler import NCursesHandler
 from utils.Logger import get_logger
+from utils.constants import *
 
 #Check if everything needed is installed and correct version, continue with program, else halt.
 
@@ -119,7 +120,7 @@ def createDB(results):
 	try:
 		DB_Orchestrator.create_database(results[0]) #results is a list so pass in first index which is the new databases name.
 	except:
-		results[0] = "ERROR! Check if duplicate name or spaces"
+		results[0] = CREATE_DB_ERROR
 	ncurses.createDB_window(createDB_menu, "", "Close", results) #open exit window
 
 #Used to load form to get name of new database to create and calls createMySQLdb()

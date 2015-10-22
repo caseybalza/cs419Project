@@ -9,6 +9,7 @@ import curses.textpad
 import pprint
 from utils.view import *
 from math import ceil
+from utils.constants import *
 
 
 class NCursesHandler:
@@ -97,7 +98,7 @@ class NCursesHandler:
 		self.stdscr3.bkgd(' ', curses.color_pair(8))
 		self.stdscr3.addstr(3,2, 'Redirecting you back to Main Menu')
 		
-		if results[0] == "ERROR! Check if duplicate name or spaces":
+		if results[0] == CREATE_DB_ERROR:
 			self.stdscr3.addstr(10,2, results[0]) #Just output error message
 		else:
 			self.stdscr3.addstr(9,2, "Success! " + results[0] + " database created." ) #output succus message + db name
