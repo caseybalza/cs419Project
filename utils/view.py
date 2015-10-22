@@ -28,10 +28,13 @@ help_menu = {
 
 createDB_menu = {
 	'title': "Create New Database", 'type': Dictionary.MENU, 'subtitle': "", 'location': '',
-	'options':[
-
-	]#end of createDB_menu_menu options
+	'options':[]#end of createDB_menu_menu options
 }#end of createDB_menu data
+
+deleteDB_menu = {
+	'title': "Delete Database", 'type': Dictionary.MENU, 'subtitle': "", 'location': '',
+	'options':[]#end of deleteDB_menu options
+}#end of deleteDB_menu
 
 login_form = {
 	'title': "Login", 'type': Dictionary.FORM, 'subtitle': "Please login to your db account", 'location': '',
@@ -49,6 +52,17 @@ createDB_form = {
 	'title': "Create New Database", 'type': Dictionary.FORM, 'subtitle': "Please enter the name of your new database to create", 'location': '',
 	'fields':[
 		{'title': "New Database Name: ", 'type': Dictionary.TEXT}
+	],
+	'options': [
+		{'title': "Back"},
+		{'title': "Continue", 'type': Dictionary.COMMAND, 'command': ''}
+	]
+}
+
+deleteDB_form = {
+	'title': "Delete this database?", 'type': Dictionary.FORM, 'subtitle': "Please type in the name of the database to confirm.", 'location': '',
+	'fields':[
+		{'title': "Confirm Delete: ", 'type': Dictionary.TEXT},
 	],
 	'options': [
 		{'title': "Back"},
