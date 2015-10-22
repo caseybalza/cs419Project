@@ -112,10 +112,14 @@ def login(type):
 	#return login_form
 
 def createDB(results):
+	logger.info("Inside createDB")
 	ncurses.stdscr.clear()
 	ncurses.stdscr2.clear()
 	ncurses.stdscr3.clear()
-	results[0] = DB_Orchestrator.create_database(results[0]) #results is a list so pass in first index which is the new databases name.
+	try:
+		DB_Orchestrator.create_database(results[0]) #results is a list so pass in first index which is the new databases name.
+	except:
+		results[0] = "ERROR! Check if duplicate name or spaces"
 	ncurses.createDB_window(createDB_menu, "", "Close", results) #open exit window
 
 #Used to load form to get name of new database to create and calls createMySQLdb()
