@@ -58,12 +58,12 @@ def show_tables(dbs):
 def show_db_options(dbs):
 	logger.info("Inside show_db_options")
 	viewtables = os.path.join('show_tables(\"{}\")'.format(dbs))
-	#deleteDB = os.path.join('loadDB_deleteform(\"{}\")'.format(dbs))
+	deleteDB = os.path.join('loadDB_deleteform(\"{}\")'.format(dbs))
 	db_options_menu = {
 	'title': dbs + " Database Options", 'type': Dictionary.MENU, 'subtitle': "Please select an action...",
 	'location': dbs ,'options':[
 				{ 'title': "View Tables", 'type': Dictionary.COMMAND, 'command': viewtables },
-				{ 'title': "Delete database", 'type': Dictionary.COMMAND, 'command': 'loadDB_deleteform()' },
+				{ 'title': "Delete database", 'type': Dictionary.COMMAND, 'command': deleteDB },
 				{ 'title': "Export database", 'type': Dictionary.COMMAND, 'command': '' }
 			]#end of DB_options_menu
 	}#DB_options_menu
@@ -133,14 +133,15 @@ def deleteDB(results):
 	ncurses.stdscr.clear()
 	ncurses.stdscr2.clear()
 	ncurses.stdscr3.clear()
-	#if results[0] == 'hi':
-	try:
-		DB_Orchestrator.delete_database(results[0]) #results is a list so pass in first index which is the new databases name.
-	except:
-		results[0] = DELETE_DB_ERROR
-	#else:
-	#	results[0] = DELETE_WRONG_DB_ERROR
-	ncurses.deleteDB_window(deleteDB_menu, "", "Close", results) #open createDB_window
+	if results[0] == results[1]:
+		try:
+			DB_Orchestrator.delete_database(results[0]) #results is a list so pass in first index which is the new databases name.
+		except:
+			results[0] = DELETE_DB_ERROR
+	else:
+		results[0] = DELETE_WRONG_DB_ERROR
+	ncurses.deleteDB_window(deleteDB_menu, "", "Close", results) #open deleteDB_window
+	return 'DELETED'
 
 def createDB(results):
 	logger.info("Inside createDB")
@@ -161,10 +162,11 @@ def loadDB_createform():
 	return form
 
 #Used to load form to get name of database to delete and calls deleteDB()
-def loadDB_deleteform():
+def loadDB_deleteform(dbs):
 	form = deleteDB_form
 	function = 'deleteDB('
 	form['options'][1]['command'] = function
+	form['fields'][1]['type'] = dbs
 	return form
 
 def mainFunction(screen): 
@@ -193,6 +195,11 @@ def mainFunction(screen):
 					nextMenu = oldMenu
 				logger.info(nextMenu)
 
+				#Return back to main menu and login if database has been deleted
+				if nextMenu == 'DELETED':
+					ncurses.resetscreen()
+					break
+
 				location.append(nextMenu.get('location'))  #Add part of path to location
 				if nextMenu == storeold:
 					back_list_stack.pop()
@@ -208,13 +215,12 @@ def mainFunction(screen):
 				ncurses.resetscreen()
 				
 				#Return back to main menu and login if new database has been created
-				if oldMenu == loadDB_createform() or oldMenu == loadDB_deleteform():
+				if oldMenu == loadDB_createform():
 					break
 		
 				str_location = ''.join(location) #convert list to string.
 
 				results = ncurses.processmenu(nextMenu, str_location, oldMenu)
-
 				storeold = oldMenu
 				back_list_stack.append(nextMenu)
 

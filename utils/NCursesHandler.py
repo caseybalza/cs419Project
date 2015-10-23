@@ -120,8 +120,10 @@ class NCursesHandler:
 		
 		if results[0] == DELETE_DB_ERROR:
 			self.stdscr3.addstr(10,2, results[0]) #Just output error message
+		elif results[0] == DELETE_WRONG_DB_ERROR:
+			self.stdscr3.addstr(10,2, results[0]) #Just output error message
 		else:
-			self.stdscr3.addstr(9,2, results[0] ) #output success message + db name
+			self.stdscr3.addstr(9,2, "Success! " + results[0] + " database deleted." ) #output success message + db name
 
 		self.stdscr.refresh()
 		self.stdscr2.refresh()
@@ -196,6 +198,7 @@ class NCursesHandler:
 				index = next
 			else:
 				boxs.append(None)
+				results.append(form['fields'][index]['type']) #Used for deleting a database
 		sys.stdout.flush()
 		while x !=ord('\n'):
 			if pos != oldpos:

@@ -63,6 +63,7 @@ deleteDB_form = {
 	'title': "Delete this database?", 'type': Dictionary.FORM, 'subtitle': "Please type in the name of the database to confirm.", 'location': '',
 	'fields':[
 		{'title': "Confirm Delete: ", 'type': Dictionary.TEXT},
+		{'title': "", 'type': ""}
 	],
 	'options': [
 		{'title': "Back"},
