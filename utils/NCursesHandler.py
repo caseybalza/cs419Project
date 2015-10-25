@@ -429,7 +429,7 @@ class NCursesHandler:
                 box.clear()
 
         def draw_table_bottom_bar(self):
-                box = curses.newwin(1, 80, 22, 0)
+                box = curses.newwin(1, 80, 27, 0)
                 box.box()
                 box.bkgd(' ', curses.color_pair(1))
                 #box.border('|','|','-','-','+','+','+','+')
