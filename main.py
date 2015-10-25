@@ -34,9 +34,7 @@ def show_table_contents(table):
 	tableContents = DB_Orchestrator.get_table_for_viewing(table)
         location = "{}/{}/{}".format(DB_Orchestrator.databaseType, DB_Orchestrator.database, table)
 	logger.info("Displaying the {} table".format(table))
-	ncurses.draw_table(table, tableContents, location)
-
-	return None
+	return ncurses.draw_table(table, tableContents, location)
 
 def show_tables(dbs):
 	logger.info("Inside show_tables")
@@ -191,6 +189,10 @@ def mainFunction(screen):
 				size = len(back_list_stack)
 				oldMenu = nextMenu
 				nextMenu = eval(results)
+                                if nextMenu is not None and 'commands' in nextMenu:
+                                    logger.info("Operations from table view {}".format(nextMenu))
+                                    DB_Orchestrator.perform_bulk_operations(eval(nextMenu)['commands'])
+                                    nextMenu = None
 
 				if nextMenu is None:
 					nextMenu = oldMenu

@@ -10,6 +10,7 @@ import pprint
 from utils.view import *
 from math import ceil
 from utils.constants import *
+from QueryBuilder import *
 from Logger import get_logger
 
 
@@ -455,6 +456,8 @@ class NCursesHandler:
                 box.refresh()
 
         def draw_table(self, tableName, contents, location):
+                tableOperations = dict()
+                tableOperations['commands'] = []
                 self.draw_table_bottom_bar()
                 curses.curs_set(0)
                 highlightText = curses.color_pair(3)
@@ -537,15 +540,19 @@ class NCursesHandler:
                         self.draw_table_help_box()
                     #Delete
                     if x == 68:
-                        self.logger.info("Delete row {}".format(rowPosition))
+                        tableOperations['commands'].append(DeleteQuery(schema, records[rowPosition - 1], tableName))
+                        self.logger.info("Commands list: {}".format(tableOperations['commands']))
+                        del records[rowPosition - 1]
+                        numRows = len(records)
+                        self.logger.info("Delete row {}".format(rowPosition - 1))
                     #Update
                     if x == 85:
-                        self.logger.info("Update row {}".format(rowPosition))
+                        self.logger.info("Update row {}".format(rowPosition - 1))
                     #Insert
                     if x == 73:
                         self.logger.info("Insert into table {}".format(tableName))
                     if x == ord("\n") and numRows != 0:
-                        self.logger.info("Row {} selected".format(rowPosition))
+                        self.logger.info("Row {} selected".format(rowPosition - 1))
                         #Item selected, does nothing currently
 
                     box.erase()
@@ -575,8 +582,11 @@ class NCursesHandler:
                     box.refresh()
                     x = box.getch()
 
-                curses.endwin()
                 
+                curses.endwin()
+                self.logger.info(str(tableOperations))
+                return str(tableOperations)
+
 	def setuplogin(self, type):
 		form = login_form
 		function = None
