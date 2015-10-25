@@ -64,6 +64,7 @@ class NCursesHandler:
 
 	#Top Menu Bar
 	def top_bar_menu(self, location):
+                self.stdscr2.clear()
 		self.stdscr2.border(124, 124, 61, 61, 35, 35, 35, 35)
 		self.stdscr2.bkgd(' ', curses.color_pair(1))
 		self.stdscr2.addstr(1,2, 'Location:')
@@ -409,10 +410,8 @@ class NCursesHandler:
 			#return result['option']['command']+str(result['fields'])+')'
 	#end processmenu()
 	
-        def draw_table(self, tableName, contents):
-                tableScr = curses.initscr()
-                tableScr.keypad(1)
-                tableScr.border(0)
+        def draw_table(self, tableName, contents, location):
+                self.top_bar_menu(location)
                 curses.init_pair(20, curses.COLOR_BLACK, curses.COLOR_CYAN)
                 highlightText = curses.color_pair(20)
                 normalText = curses.A_NORMAL
@@ -421,9 +420,11 @@ class NCursesHandler:
                 numCols = len(schema)
                 numRows = len(records)
                 maxEntitiesOnPage = 10
+                self.stdscr2.refresh()
 
-                box = curses.newwin(maxEntitiesOnPage + 4, 80, 1, 1)
+                box = curses.newwin(maxEntitiesOnPage + 4, 80, 3, 0)
                 box.box()
+                box.border('|','|','-','-','+','+','+','+')
                 box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
                 box.addstr(2, 2, "{:>16.16}".format(""), curses.A_UNDERLINE)
                 box.addstr(2, 18, "{:>20.16}".format(schema[0][0] if numCols > 0 else ""), curses.A_UNDERLINE)
@@ -449,10 +450,10 @@ class NCursesHandler:
                     if i == numRows:
                         break
                 
-                tableScr.refresh()
                 box.refresh()
 
-                x = tableScr.getch()
+                sys.stdout.flush()
+                x = self.stdscr2.getch()
                 while x != 69:
                     if x == curses.KEY_DOWN:
                         if page == 1:
@@ -488,13 +489,11 @@ class NCursesHandler:
                         if columnPosition < numCols - 3:
                             columnPosition += 1
                     if x == ord("\n") and numRows != 0:
-                        tableScr.erase()
-                        tableScr.border(0)
+                        self.stdscr2.refresh()
                         #Item selected, does nothing currently
 
                     box.erase()
-                    tableScr.border(0)
-                    box.border(0)
+                    box.border('|','|','-','-','+','+','+','+')
 
 
                     box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
@@ -518,9 +517,8 @@ class NCursesHandler:
                         if i == numRows:
                             break
 
-                    tableScr.refresh()
                     box.refresh()
-                    x = tableScr.getch()
+                    x = self.stdscr2.getch()
 
                 curses.endwin()
                 

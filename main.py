@@ -32,8 +32,9 @@ def show_table_contents(table):
 	logger.info("Inside show_table_contents")
 	logger.info("Database selected is: {}".format(DB_Orchestrator.database))
 	tableContents = DB_Orchestrator.get_table_for_viewing(table)
+        location = "{}/{}/{}".format(DB_Orchestrator.databaseType, DB_Orchestrator.database, table)
 	logger.info("Displaying the {} table".format(table))
-	ncurses.draw_table(table, tableContents)
+	ncurses.draw_table(table, tableContents, location)
 
 	return None
 
