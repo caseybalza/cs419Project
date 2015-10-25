@@ -10,6 +10,7 @@ import pprint
 from utils.view import *
 from math import ceil
 from utils.constants import *
+from Logger import get_logger
 
 
 class NCursesHandler:
@@ -18,7 +19,8 @@ class NCursesHandler:
 
 
 		self.stdscr = curses.initscr() #initialize ncurses
-		
+                self.logger = get_logger("NcursesHandler")
+
 		curses.noecho() # Disables automatic echoing of key presses (prevents program from input each key twice)
 		curses.cbreak() # Runs each key as it is pressed rather than waiting for the return key to pressed)
 		curses.start_color() #allow colors
@@ -426,7 +428,34 @@ class NCursesHandler:
                     x = box.getch()
                 box.clear()
 
+        def draw_table_bottom_bar(self):
+                box = curses.newwin(1, 80, 22, 0)
+                box.box()
+                box.bkgd(' ', curses.color_pair(1))
+                #box.border('|','|','-','-','+','+','+','+')
+                try:
+                    box.addstr(0, 0, "{:2}".format(""))
+                except:
+                    pass
+
+                box.addstr(0, 2, "{:<1}".format("D"), curses.A_UNDERLINE)
+                box.addstr(0, 3, "{:<9}".format("elete"))
+
+                box.addstr(0, 12, "{:<1}".format("U"), curses.A_UNDERLINE)
+                box.addstr(0, 13, "{:<9}".format("pdate"))
+
+                box.addstr(0, 22, "{:<1}".format("I"), curses.A_UNDERLINE)
+                box.addstr(0, 23, "{:<9}".format("nsert"))
+
+                try:
+                    box.addstr(0, 30, "{:50}".format(""))
+                except:
+                    pass
+
+                box.refresh()
+
         def draw_table(self, tableName, contents, location):
+                self.draw_table_bottom_bar()
                 curses.curs_set(0)
                 highlightText = curses.color_pair(3)
                 normalText = curses.A_NORMAL
@@ -434,16 +463,16 @@ class NCursesHandler:
                 records = contents[1]
                 numCols = len(schema)
                 numRows = len(records)
-                maxEntitiesOnPage = 10
+                maxEntitiesOnPage = 15
 
                 box = curses.newwin(maxEntitiesOnPage + 4, 80, 3, 0)
                 box.box()
                 box.border('|','|','-','-','+','+','+','+')
                 box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
-                box.addstr(2, 2, "{:>16.16}".format(""), curses.A_UNDERLINE)
-                box.addstr(2, 18, "{:>20.16}".format(schema[0][0] if numCols > 0 else ""), curses.A_UNDERLINE)
-                box.addstr(2, 38, "{:>20.16}".format(schema[1][0] if numCols > 1 else ""), curses.A_UNDERLINE)
-                box.addstr(2, 58, "{:>20.16}".format(schema[2][0] if numCols > 2 else ""), curses.A_UNDERLINE)
+                box.addstr(2, 2, "{:>4.4}".format(""), curses.A_UNDERLINE)
+                box.addstr(2, 6, "{:>24.20}".format(schema[0][0] if numCols > 0 else ""), curses.A_UNDERLINE)
+                box.addstr(2, 30, "{:>24.20}".format(schema[1][0] if numCols > 1 else ""), curses.A_UNDERLINE)
+                box.addstr(2, 54, "{:>24.20}".format(schema[2][0] if numCols > 2 else ""), curses.A_UNDERLINE)
                 box.keypad(1)
 
                 pages =  int(ceil(numRows / maxEntitiesOnPage))
@@ -459,7 +488,7 @@ class NCursesHandler:
                     box.addstr(i + 2, 2, str(i) + " - ", textType)
 
                     for j in range(0, 3):
-                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 18 + (20 * j), "{:>20.16}".format(
+                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
                             str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
 
                     if i == numRows:
@@ -506,17 +535,26 @@ class NCursesHandler:
                     #Help
                     if x == 72:
                         self.draw_table_help_box()
+                    #Delete
+                    if x == 68:
+                        self.logger.info("Delete row {}".format(rowPosition))
+                    #Update
+                    if x == 85:
+                        self.logger.info("Update row {}".format(rowPosition))
+                    #Insert
+                    if x == 73:
+                        self.logger.info("Insert into table {}".format(tableName))
                     if x == ord("\n") and numRows != 0:
-                        self.stdscr2.refresh()
+                        self.logger.info("Row {} selected".format(rowPosition))
                         #Item selected, does nothing currently
 
                     box.erase()
                     box.border('|','|','-','-','+','+','+','+')
 
                     box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
-                    box.addstr(2, 2, "{:>16.16}".format(""), curses.A_UNDERLINE)
+                    box.addstr(2, 2, "{:>4.4}".format(""), curses.A_UNDERLINE)
                     for i in range(0, 3):
-                        box.addstr(2, 18 + (20 * i), "{:>20.16}".format(schema[i + columnPosition][0] if numCols > i + columnPosition else ""), curses.A_UNDERLINE)
+                        box.addstr(2, 6 + (24 * i), "{:>24.20}".format(schema[i + columnPosition][0] if numCols > i + columnPosition else ""), curses.A_UNDERLINE)
 
                     for i in range(1 + (maxEntitiesOnPage * (page - 1)), maxEntitiesOnPage + 1 + (maxEntitiesOnPage * (page - 1))):
                         if (i + (maxEntitiesOnPage * (page - 1)) == rowPosition + (maxEntitiesOnPage * (page - 1))):
@@ -528,7 +566,7 @@ class NCursesHandler:
 
                         
                         for j in range(0, 3):
-                            box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 18 + (20 * j), "{:>20.16}".format(
+                            box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
                                 str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
 
                         if i == numRows:
