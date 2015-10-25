@@ -463,7 +463,7 @@ class NCursesHandler:
                 records = contents[1]
                 numCols = len(schema)
                 numRows = len(records)
-                maxEntitiesOnPage = 15
+                maxEntitiesOnPage = 20
 
                 box = curses.newwin(maxEntitiesOnPage + 4, 80, 3, 0)
                 box.box()
