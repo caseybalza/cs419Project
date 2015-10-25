@@ -410,17 +410,31 @@ class NCursesHandler:
 			#return result['option']['command']+str(result['fields'])+')'
 	#end processmenu()
 	
+        def draw_table_help_box(self):
+                box = curses.newwin(10, 40, 3, 20)
+                box.box()
+                box.border('|','|','-','-','+','+','+','+')
+                box.addstr(1, 2, "{:^36}".format("Table View Help Menu"), curses.A_UNDERLINE)
+                box.addstr(3, 2, "{:<36}".format("Left arrow: scrolls columns left"))
+                box.addstr(4, 2, "{:<36}".format("Right arrow: scrolls columns right"))
+                box.addstr(5, 2, "{:<36}".format("Down arrow: scroll entries down"))
+                box.addstr(6, 2, "{:<36}".format("Up arrow: scroll entries up"))
+                box.addstr(8, 2, "{:^36}".format("Close"), curses.color_pair(3))
+                box.refresh()
+                x = box.getch()
+                while x != ord('\n'):
+                    x = box.getch()
+                box.clear()
+
         def draw_table(self, tableName, contents, location):
-                self.top_bar_menu(location)
-                curses.init_pair(20, curses.COLOR_BLACK, curses.COLOR_CYAN)
-                highlightText = curses.color_pair(20)
+                curses.curs_set(0)
+                highlightText = curses.color_pair(3)
                 normalText = curses.A_NORMAL
                 schema = contents[0]
                 records = contents[1]
                 numCols = len(schema)
                 numRows = len(records)
                 maxEntitiesOnPage = 10
-                self.stdscr2.refresh()
 
                 box = curses.newwin(maxEntitiesOnPage + 4, 80, 3, 0)
                 box.box()
@@ -430,6 +444,7 @@ class NCursesHandler:
                 box.addstr(2, 18, "{:>20.16}".format(schema[0][0] if numCols > 0 else ""), curses.A_UNDERLINE)
                 box.addstr(2, 38, "{:>20.16}".format(schema[1][0] if numCols > 1 else ""), curses.A_UNDERLINE)
                 box.addstr(2, 58, "{:>20.16}".format(schema[2][0] if numCols > 2 else ""), curses.A_UNDERLINE)
+                box.keypad(1)
 
                 pages =  int(ceil(numRows / maxEntitiesOnPage))
                 rowPosition = 1
@@ -450,10 +465,10 @@ class NCursesHandler:
                     if i == numRows:
                         break
                 
-                box.refresh()
-
                 sys.stdout.flush()
-                x = self.stdscr2.getch()
+                self.top_bar_menu(location)
+                box.refresh()
+                x = box.getch()
                 while x != 69:
                     if x == curses.KEY_DOWN:
                         if page == 1:
@@ -488,13 +503,15 @@ class NCursesHandler:
                     if x == curses.KEY_RIGHT:
                         if columnPosition < numCols - 3:
                             columnPosition += 1
+                    #Help
+                    if x == 72:
+                        self.draw_table_help_box()
                     if x == ord("\n") and numRows != 0:
                         self.stdscr2.refresh()
                         #Item selected, does nothing currently
 
                     box.erase()
                     box.border('|','|','-','-','+','+','+','+')
-
 
                     box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
                     box.addstr(2, 2, "{:>16.16}".format(""), curses.A_UNDERLINE)
@@ -518,7 +535,7 @@ class NCursesHandler:
                             break
 
                     box.refresh()
-                    x = self.stdscr2.getch()
+                    x = box.getch()
 
                 curses.endwin()
                 
