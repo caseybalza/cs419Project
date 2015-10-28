@@ -541,6 +541,117 @@ class NCursesHandler:
                     return 7;
                 return char
 
+        def draw_table_update_box(self, schema, record, table):
+                updateValues = {}
+                selectionOptions = ["Cancel", "Keep", "Update", None]
+                selectedValue = 3
+                recordAsStringMap = {}
+                for index, column in enumerate(schema):
+                    recordAsStringMap[column[0]] = str(record[index])
+
+                def redraw_table_update_box(column, table, inputValue, recordAsStringMap):
+                    box.erase()
+                    box.box()
+                    box.border('|','|','-','-','+','+','+','+')
+                    box.addstr(1, 2, "{:^72.72}".format("Update entry in the {} table".format(table)), curses.A_UNDERLINE)
+                    box.addstr(3, 2, "{:<32.32}".format("{}".format(column[0])), curses.A_UNDERLINE)
+
+                    if selectionOptions[selectedValue] == "Cancel":
+                        box.addstr(10, 2, "{:^24}".format("Cancel"), curses.color_pair(3))
+                    else:
+                        box.addstr(10, 2, "{:^24}".format("Cancel"))
+
+                    if selectionOptions[selectedValue] == "Keep":
+                        box.addstr(10, 26, "{:^24}".format("Keep"), curses.color_pair(3))
+                    else:
+                        box.addstr(10, 26, "{:^24}".format("Keep"))
+
+                    if selectionOptions[selectedValue] == "Update":
+                        box.addstr(10, 50, "{:^24}".format("Update"), curses.color_pair(3))
+                    else:
+                        box.addstr(10, 50, "{:^24}".format("Update"))
+
+                    box.addstr(4, 2, "{:<32.32}".format("Old value:", curses.A_UNDERLINE))
+                    box.addstr(6, 2, "{:<32.32}".format("New value:", curses.A_UNDERLINE))
+                    box.refresh()
+
+                    oldValueWindow = curses.newwin(1, 48, 15, 4)
+                    oldValueWindow.bkgd(' ', curses.color_pair(8))
+                    try:
+                        oldValueWindow.addstr(0, 0, "{:<48}".format(recordAsStringMap[column[0]]), curses.color_pair(8))
+                    except:
+                        pass
+                    oldValueWindow.refresh()
+
+                    inputwindow = curses.newwin(1, 48, 17, 4)
+                    inputwindow.bkgd(' ', curses.color_pair(8))
+                    if inputValue != None:
+                        inputwindow.addstr(0, 0, "{:<38}".format(inputValue))
+                    inputwindow.refresh()
+
+                box = curses.newwin(12, 76, 10, 2)
+                box.keypad(1)
+                box.bkgd(' ', curses.color_pair(1))
+                box.box()
+                box.refresh()
+
+                for column in schema:
+                    redraw_table_update_box(column, table, None, recordAsStringMap)
+                    curses.curs_set(1)
+                    inputwindow = curses.newwin(1, 48, 17, 4)
+                    inputwindow.bkgd(' ', curses.color_pair(8))
+                    inputtextbox = curses.textpad.Textbox(inputwindow)
+                    inputValue = inputtextbox.edit(self.insertInputValidator).rstrip('\n').strip()
+                    if inputValue == '':
+                        inputValue = None
+                    elif 'int' in column[1]:
+                        inputValue = long(inputValue)
+                    elif 'double' in column[1]:
+                        inputValue = float(inputValue)
+                    elif 'varchar' in column[1]:
+                        maxlength = int(column[1].rsplit('(')[1].rsplit(')')[0])
+                        inputValue = str(inputValue[:maxlength])
+                    elif 'character' in column[1]:
+                        inputValue = str(inputValue[:column[2]])
+                    else:
+                        pass
+                    curses.curs_set(0)
+                    self.logger.info("Value entered, column: {}, value: {}".format(column[0], inputValue))
+                    updateValues[column[0]] = inputValue
+                    selectedValue = 1
+                    redraw_table_update_box(column, table, inputValue, recordAsStringMap)
+                    x = box.getch()
+
+                    while True:
+                        if x == curses.KEY_LEFT:
+                            if selectedValue > 0:
+                                selectedValue -= 1
+                                redraw_table_update_box(column, table, inputValue, recordAsStringMap)
+
+                        if x == curses.KEY_RIGHT:
+                            if selectedValue < len(selectionOptions) - 2:
+                                selectedValue += 1
+                                redraw_table_update_box(column, table, inputValue, recordAsStringMap)
+
+                        if x == ord('\n'):
+                            if selectionOptions[selectedValue] == "Cancel":
+                                box.clear()
+                                inputwindow.clear()
+                                return None
+                            elif selectionOptions[selectedValue] == "Keep":
+                                updateValues[column[0]] = None
+                            else:
+                                pass
+
+                            selectedValue = 3
+                            redraw_table_update_box(column, table, inputValue, recordAsStringMap)
+                            break
+                        x = box.getch()
+
+                box.clear()
+                inputwindow.clear()
+                return updateValues
+
         def draw_table_insert_box(self, schema, table):
                 insertValues = {}
                 selectedValue = "Continue"
@@ -658,22 +769,21 @@ class NCursesHandler:
                 box = curses.newwin(1, 80, 27, 0)
                 box.box()
                 box.bkgd(' ', curses.color_pair(1))
-                #box.border('|','|','-','-','+','+','+','+')
                 try:
                     box.addstr(0, 0, "{:2}".format(""))
                 except:
                     pass
 
-                box.addstr(0, 2, "{:<1}".format("D"), curses.A_UNDERLINE)
+                box.addstr(0, 2, "{:<1}".format("D"), curses.A_UNDERLINE and curses.color_pair(3))
                 box.addstr(0, 3, "{:<9}".format("elete"))
 
-                box.addstr(0, 12, "{:<1}".format("U"), curses.A_UNDERLINE)
+                box.addstr(0, 12, "{:<1}".format("U"), curses.A_UNDERLINE and curses.color_pair(3))
                 box.addstr(0, 13, "{:<9}".format("pdate"))
 
-                box.addstr(0, 22, "{:<1}".format("I"), curses.A_UNDERLINE)
+                box.addstr(0, 22, "{:<1}".format("I"), curses.A_UNDERLINE and curses.color_pair(3))
                 box.addstr(0, 23, "{:<9}".format("nsert"))
 
-                box.addstr(0, 32, "{:<1}".format("S"), curses.A_UNDERLINE)
+                box.addstr(0, 32, "{:<1}".format("S"), curses.A_UNDERLINE and curses.color_pair(3))
                 box.addstr(0, 33, "{:<9}".format("ort"))
 
                 try:
@@ -768,9 +878,6 @@ class NCursesHandler:
                         if selectedColumn > 0:
                             selectedColumn -= 1
 
-
-                        #if columnPosition > 0:
-                            #columnPosition -= 1
                     if x == curses.KEY_RIGHT:
                         if columnPosition < numCols - 3 and selectedColumn % 3 == 2:
                             columnPosition += 3
@@ -798,6 +905,21 @@ class NCursesHandler:
                     #Update
                     if x == 85:
                         self.logger.info("Update row {}".format(rowPosition - 1))
+                        updateValues = self.draw_table_update_box(schema, records[rowPosition - 1], tableName)
+                        if updateValues is not None:
+                            self.logger.info(updateValues)
+                            updateQuery = UpdateQuery(schema, updateValues, records[rowPosition - 1], tableName)
+                            self.logger.info(updateQuery)
+                            tableOperations['commands'].append(updateQuery)
+                            recordForViewing = []
+                            for index, column in enumerate(schema):
+                                if updateValues[column[0]] is not None:
+                                    recordForViewing.append(updateValues[column[0]])
+                                else:
+                                    recordForViewing.append(records[rowPosition - 1][index])
+                            records[rowPosition - 1] = tuple(recordForViewing)
+                            self.logger.info("Update record in table {}".format(tableName))
+
                     #Insert
                     if x == 73:
                         insertValues = self.draw_table_insert_box(schema, tableName)
