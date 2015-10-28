@@ -7,7 +7,14 @@ import sys
 import time
 import curses.textpad
 from utils.view import *
+<<<<<<< HEAD
 
+=======
+from math import ceil
+from utils.constants import *
+from QueryBuilder import *
+from Logger import get_logger
+>>>>>>> refs/remotes/origin/master
 
 
 class NCursesHandler:
@@ -16,7 +23,8 @@ class NCursesHandler:
 
 
 		self.stdscr = curses.initscr() #initialize ncurses
-		
+                self.logger = get_logger("NcursesHandler")
+
 		curses.noecho() # Disables automatic echoing of key presses (prevents program from input each key twice)
 		curses.cbreak() # Runs each key as it is pressed rather than waiting for the return key to pressed)
 		curses.start_color() #allow colors
@@ -62,6 +70,7 @@ class NCursesHandler:
 
 	#Top Menu Bar
 	def top_bar_menu(self, location):
+                self.stdscr2.clear()
 		self.stdscr2.border(124, 124, 61, 61, 35, 35, 35, 35)
 		self.stdscr2.bkgd(' ', curses.color_pair(1))
 		self.stdscr2.addstr(1,2, 'Location:')
@@ -96,10 +105,10 @@ class NCursesHandler:
 		self.stdscr3.bkgd(' ', curses.color_pair(8))
 		self.stdscr3.addstr(3,2, 'Redirecting you back to Main Menu')
 		
-		if results[0] == "ERROR! Check if duplicate name or spaces":
+		if results[0] == CREATE_DB_ERROR:
 			self.stdscr3.addstr(10,2, results[0]) #Just output error message
 		else:
-			self.stdscr3.addstr(9,2, "Success! " + results[0] + " database created." ) #output succus message + db name
+			self.stdscr3.addstr(9,2, "Success! " + results[0] + " database created." ) #output success message + db name
 
 		self.stdscr.refresh()
 		self.stdscr2.refresh()
@@ -107,6 +116,28 @@ class NCursesHandler:
 		self.stdscr.clear
 		self.processmenu(new_menu, location, old_menu)
 	#end createDB_window
+
+	def deleteDB_window(self, new_menu, location, old_menu, results):
+		self.stdscr.clear
+		self.stdscr2.clear
+		self.stdscr3.clear
+		self.stdscr3.border(0)
+		self.stdscr3.bkgd(' ', curses.color_pair(8))
+		self.stdscr3.addstr(3,2, 'Redirecting you back to Main Menu')
+		
+		if results[0] == DELETE_DB_ERROR:
+			self.stdscr3.addstr(10,2, results[0]) #Just output error message
+		elif results[0] == DELETE_WRONG_DB_ERROR:
+			self.stdscr3.addstr(10,2, results[0]) #Just output error message
+		else:
+			self.stdscr3.addstr(9,2, "Success! " + results[0] + " database deleted." ) #output success message + db name
+
+		self.stdscr.refresh()
+		self.stdscr2.refresh()
+		self.stdscr3.refresh()
+		self.stdscr.clear
+		self.processmenu(new_menu, location, old_menu)
+	#end deleteDB_window
 
 	#properly loads form, ,returns values entered
 	def runform(self, form, location, parent):
@@ -174,6 +205,7 @@ class NCursesHandler:
 				index = next
 			else:
 				boxs.append(None)
+				results.append(form['fields'][index]['type']) #Used for deleting a database
 		sys.stdout.flush()
 		while x !=ord('\n'):
 			if pos != oldpos:
@@ -228,6 +260,7 @@ class NCursesHandler:
 		oldpos=None # used to prevent the screen being redrawn every time
 		x = None #control for while loop, let's you scroll through options until return key is pressed then returns pos to program
 		         # Loop until return key is pressed
+		back = False # used for BACK menu option
 		while x !=ord('\n'):
 			if pos != oldpos:
 				oldpos = pos
@@ -260,6 +293,7 @@ class NCursesHandler:
 				if start >= 7:
 					self.stdscr.addstr(8+count,20, "%d - %s" % (count+1, "BACK"), textstyle)
 					count += 1
+					back = True
 			
 				# Now display Exit/Return at bottom of menu
 				if lastoption != 0 and lastoption != "Close":
@@ -311,7 +345,7 @@ class NCursesHandler:
 			return -1
 		elif pos == 7:
 			return -2
-		elif pos == 8 or pos == count - 1:
+		elif pos == 8 and back == True or pos == count - 1 and back == True:
 			return -3
 		else:
 			pos += start
@@ -386,6 +420,183 @@ class NCursesHandler:
 			#return result['option']['command']+str(result['fields'])+')'
 	#end processmenu()
 	
+<<<<<<< HEAD
+=======
+        def draw_table_help_box(self):
+                box = curses.newwin(10, 40, 3, 20)
+                box.box()
+                box.border('|','|','-','-','+','+','+','+')
+                box.addstr(1, 2, "{:^36}".format("Table View Help Menu"), curses.A_UNDERLINE)
+                box.addstr(3, 2, "{:<36}".format("Left arrow: scrolls columns left"))
+                box.addstr(4, 2, "{:<36}".format("Right arrow: scrolls columns right"))
+                box.addstr(5, 2, "{:<36}".format("Down arrow: scroll entries down"))
+                box.addstr(6, 2, "{:<36}".format("Up arrow: scroll entries up"))
+                box.addstr(8, 2, "{:^36}".format("Close"), curses.color_pair(3))
+                box.refresh()
+                x = box.getch()
+                while x != ord('\n'):
+                    x = box.getch()
+                box.clear()
+
+        def draw_table_bottom_bar(self):
+                box = curses.newwin(1, 80, 27, 0)
+                box.box()
+                box.bkgd(' ', curses.color_pair(1))
+                #box.border('|','|','-','-','+','+','+','+')
+                try:
+                    box.addstr(0, 0, "{:2}".format(""))
+                except:
+                    pass
+
+                box.addstr(0, 2, "{:<1}".format("D"), curses.A_UNDERLINE)
+                box.addstr(0, 3, "{:<9}".format("elete"))
+
+                box.addstr(0, 12, "{:<1}".format("U"), curses.A_UNDERLINE)
+                box.addstr(0, 13, "{:<9}".format("pdate"))
+
+                box.addstr(0, 22, "{:<1}".format("I"), curses.A_UNDERLINE)
+                box.addstr(0, 23, "{:<9}".format("nsert"))
+
+                try:
+                    box.addstr(0, 30, "{:50}".format(""))
+                except:
+                    pass
+
+                box.refresh()
+
+        def draw_table(self, tableName, contents, location):
+                tableOperations = dict()
+                tableOperations['commands'] = []
+                self.draw_table_bottom_bar()
+                curses.curs_set(0)
+                highlightText = curses.color_pair(3)
+                normalText = curses.A_NORMAL
+                schema = contents[0]
+                records = contents[1]
+                numCols = len(schema)
+                numRows = len(records)
+                maxEntitiesOnPage = 20
+
+                box = curses.newwin(maxEntitiesOnPage + 4, 80, 3, 0)
+                box.box()
+                box.border('|','|','-','-','+','+','+','+')
+                box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
+                box.addstr(2, 2, "{:>4.4}".format(""), curses.A_UNDERLINE)
+                box.addstr(2, 6, "{:>24.20}".format(schema[0][0] if numCols > 0 else ""), curses.A_UNDERLINE)
+                box.addstr(2, 30, "{:>24.20}".format(schema[1][0] if numCols > 1 else ""), curses.A_UNDERLINE)
+                box.addstr(2, 54, "{:>24.20}".format(schema[2][0] if numCols > 2 else ""), curses.A_UNDERLINE)
+                box.keypad(1)
+
+                pages =  int(ceil(numRows / maxEntitiesOnPage))
+                rowPosition = 1
+                columnPosition = 0
+                page = 1
+                for i in range(1, maxEntitiesOnPage + 1):
+                    if i == rowPosition:
+                        textType = highlightText
+                    else:
+                        textType = normalText
+
+                    box.addstr(i + 2, 2, str(i) + " - ", textType)
+
+                    for j in range(0, 3):
+                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
+                            str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
+
+                    if i == numRows:
+                        break
+                
+                sys.stdout.flush()
+                self.top_bar_menu(location)
+                box.refresh()
+                x = box.getch()
+                while x != 69:
+                    if x == curses.KEY_DOWN:
+                        if page == 1:
+                            if rowPosition < i:
+                                rowPosition += 1
+                            else:
+                                if pages > 1:
+                                    page += 1
+                                    rowPosition = 1 + (maxEntitiesOnPage * (page - 1))
+                        elif page == pages + 1:
+                            if rowPosition < numRows:
+                                rowPosition += 1
+                        else:
+                            if rowPosition < maxEntitiesOnPage + (maxEntitiesOnPage * (page - 1)):
+                                rowPosition += 1
+                            else:
+                                page += 1
+                                rowPosition = 1 + (maxEntitiesOnPage * (page - 1))
+                    if x == curses.KEY_UP:
+                        if page == 1:
+                            if rowPosition > 1:
+                                rowPosition -= 1
+                        else:
+                            if rowPosition> (1 + (maxEntitiesOnPage * (page - 1))):
+                                rowPosition -= 1
+                            else:
+                                page -= 1
+                                rowPosition = maxEntitiesOnPage + (maxEntitiesOnPage * (page - 1))
+                    if x == curses.KEY_LEFT:
+                        if columnPosition > 0:
+                            columnPosition -= 1
+                    if x == curses.KEY_RIGHT:
+                        if columnPosition < numCols - 3:
+                            columnPosition += 1
+                    #Help
+                    if x == 72:
+                        self.draw_table_help_box()
+                    #Delete
+                    if x == 68:
+                        tableOperations['commands'].append(DeleteQuery(schema, records[rowPosition - 1], tableName))
+                        self.logger.info("Commands list: {}".format(tableOperations['commands']))
+                        del records[rowPosition - 1]
+                        numRows = len(records)
+                        self.logger.info("Delete row {}".format(rowPosition - 1))
+                    #Update
+                    if x == 85:
+                        self.logger.info("Update row {}".format(rowPosition - 1))
+                    #Insert
+                    if x == 73:
+                        self.logger.info("Insert into table {}".format(tableName))
+                    if x == ord("\n") and numRows != 0:
+                        self.logger.info("Row {} selected".format(rowPosition - 1))
+                        #Item selected, does nothing currently
+
+                    box.erase()
+                    box.border('|','|','-','-','+','+','+','+')
+
+                    box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
+                    box.addstr(2, 2, "{:>4.4}".format(""), curses.A_UNDERLINE)
+                    for i in range(0, 3):
+                        box.addstr(2, 6 + (24 * i), "{:>24.20}".format(schema[i + columnPosition][0] if numCols > i + columnPosition else ""), curses.A_UNDERLINE)
+
+                    for i in range(1 + (maxEntitiesOnPage * (page - 1)), maxEntitiesOnPage + 1 + (maxEntitiesOnPage * (page - 1))):
+                        if (i + (maxEntitiesOnPage * (page - 1)) == rowPosition + (maxEntitiesOnPage * (page - 1))):
+                            textType = highlightText
+                        else:
+                            textType = normalText
+
+                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 2, str(i) + " - ", textType)
+
+                        
+                        for j in range(0, 3):
+                            box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
+                                str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
+
+                        if i == numRows:
+                            break
+
+                    box.refresh()
+                    x = box.getch()
+
+                
+                curses.endwin()
+                self.logger.info(str(tableOperations))
+                return str(tableOperations)
+
+>>>>>>> refs/remotes/origin/master
 	def setuplogin(self, type):
 		form = login_form
 		function = None

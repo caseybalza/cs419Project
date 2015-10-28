@@ -121,7 +121,6 @@ class DatabaseOrchestrator:
         return printableTable
 
     def create_database(self, results):
-        pass
         self.logger.info("Inside create_database, databaseType: {}".format(self.databaseType))
         if self.databaseType == "MySQL":
             try:
@@ -139,3 +138,33 @@ class DatabaseOrchestrator:
             except:
                 self.logger.error(logging.exception("PostgresSQL - Create database error"))
                 raise DatabaseCursorError("PostgresSQL - Create database error")
+
+    def delete_database(self, results):
+        self.logger.info("Inside delete_database, databaseType: {}".format(self.databaseType))
+        if self.databaseType == "MySQL":
+            try:
+                self.cursor.execute("DROP DATABASE " + results) #Delete database in MySQL server
+            except:
+                self.logger.error(logging.exception("MySQL - Delete database error"))
+                raise DatabaseCursorError("MySQL - Delete database error")
+        elif self.databaseType == "PostgresSQL":
+            try:
+                con = psycopg2.connect(dbname='postgres', user=self.user, host=self.host, password=self.passwd)
+                con.autocommit = True
+                cur = con.cursor()
+                cur.execute("DROP DATABASE " + results)
+                con.close()
+            except:
+                self.logger.error(logging.exception("PostgresSQL - Delete database error"))
+                raise DatabaseCursorError("PostgresSQL - Delete database error")
+    
+    def perform_bulk_operations(self, operations):
+        self.cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+        for operation in operations:
+            try:
+                self.cursor.execute(operation)
+            except Exception, e:
+                self.logger.error("Underlying operation exception: {}".format(e))
+                self.logger.error("Operation: {} failed".format(operation))
+                raise DatabaseCursorError("Cursor Operation failed")
+        self.cursor.execute("SET FOREIGN_KEY_CHECKS=1;")

@@ -16,6 +16,7 @@ from utils.view import *
 from utils.initiateProgram import initiateProgram
 from utils.NCursesHandler import NCursesHandler
 from utils.Logger import get_logger
+from utils.constants import *
 
 #Check if everything needed is installed and correct version, continue with program, else halt.
 
@@ -31,10 +32,9 @@ def show_table_contents(table):
 	logger.info("Inside show_table_contents")
 	logger.info("Database selected is: {}".format(DB_Orchestrator.database))
 	tableContents = DB_Orchestrator.get_table_for_viewing(table)
+        location = "{}/{}/{}".format(DB_Orchestrator.databaseType, DB_Orchestrator.database, table)
 	logger.info("Displaying the {} table".format(table))
-	ncurses.draw_table(table, tableContents)
-
-	return None
+	return ncurses.draw_table(table, tableContents, location)
 
 def show_tables(dbs):
 	logger.info("Inside show_tables")
@@ -42,7 +42,7 @@ def show_tables(dbs):
 
 	dbs_menu = {
 	'title': dbs + " tables", 'type': Dictionary.MENU, 'subtitle': "Please select a table or action...",
-	'location': dbs,'options':[]#end of menu options
+	'location': "", 'options':[]#end of DB_options_menu#end of menu options
 	}#end of menu data
 
 	tables = DB_Orchestrator.show_tables()
@@ -53,6 +53,22 @@ def show_tables(dbs):
 		dbs_menu['options'].append({'title': table, 'type': Dictionary.COMMAND, 'command': action, 'location': table })
 	return dbs_menu
 #end show_tables(dbs)
+
+def show_db_options(dbs):
+	logger.info("Inside show_db_options")
+	viewtables = os.path.join('show_tables(\"{}\")'.format(dbs))
+	deleteDB = os.path.join('loadDB_deleteform(\"{}\")'.format(dbs))
+	db_options_menu = {
+	'title': dbs + " Database Options", 'type': Dictionary.MENU, 'subtitle': "Please select an action...",
+	'location': dbs ,'options':[
+				{ 'title': "View Tables", 'type': Dictionary.COMMAND, 'command': viewtables },
+				{ 'title': "Delete database", 'type': Dictionary.COMMAND, 'command': deleteDB },
+				{ 'title': "Export database", 'type': Dictionary.COMMAND, 'command': '' }
+			]#end of DB_options_menu
+	}#DB_options_menu
+	
+	return db_options_menu
+#end show_db_options(dbs)
 
 #Displays information from MySQL server
 def use_mysql(results):
@@ -73,7 +89,7 @@ def use_mysql(results):
 
 	databases = DB_Orchestrator.show_databases()
 	for database in databases:
-		action = os.path.join('show_tables(\"{}\")'.format(database))
+		action = os.path.join('show_db_options(\"{}\")'.format(database))
 		mysql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action, 'location': database})
 	
 	return mysql_menu
@@ -95,7 +111,7 @@ def use_psql(results):
 
 	databases = DB_Orchestrator.show_databases()
 	for database in databases:
-		action = os.path.join('show_tables(\"{}\")'.format(database))
+		action = os.path.join('show_db_options(\"{}\")'.format(database))
 		postgressql_menu['options'].append({'title': database, 'type': Dictionary.COMMAND, 'command': action, 'location': database})
 	return postgressql_menu
 #end use_psql()
@@ -111,6 +127,21 @@ def login(type):
 	return ncurses.setuplogin(type)
 	#return login_form
 
+def deleteDB(results):
+	logger.info("Inside deleteDB")
+	ncurses.stdscr.clear()
+	ncurses.stdscr2.clear()
+	ncurses.stdscr3.clear()
+	if results[0] == results[1]:
+		try:
+			DB_Orchestrator.delete_database(results[0]) #results is a list so pass in first index which is the new databases name.
+		except:
+			results[0] = DELETE_DB_ERROR
+	else:
+		results[0] = DELETE_WRONG_DB_ERROR
+	ncurses.deleteDB_window(deleteDB_menu, "", "Close", results) #open deleteDB_window
+	return 'DELETED'
+
 def createDB(results):
 	logger.info("Inside createDB")
 	ncurses.stdscr.clear()
@@ -119,14 +150,22 @@ def createDB(results):
 	try:
 		DB_Orchestrator.create_database(results[0]) #results is a list so pass in first index which is the new databases name.
 	except:
-		results[0] = "ERROR! Check if duplicate name or spaces"
-	ncurses.createDB_window(createDB_menu, "", "Close", results) #open exit window
+		results[0] = CREATE_DB_ERROR
+	ncurses.createDB_window(createDB_menu, "", "Close", results) #open createDB_window
 
-#Used to load form to get name of new database to create and calls createMySQLdb()
+#Used to load form to get name of new database to create and calls createDB()
 def loadDB_createform():
 	form = createDB_form
 	function = 'createDB('
 	form['options'][1]['command'] = function
+	return form
+
+#Used to load form to get name of database to delete and calls deleteDB()
+def loadDB_deleteform(dbs):
+	form = deleteDB_form
+	function = 'deleteDB('
+	form['options'][1]['command'] = function
+	form['fields'][1]['type'] = dbs
 	return form
 
 def mainFunction(screen): 
@@ -150,10 +189,19 @@ def mainFunction(screen):
 				size = len(back_list_stack)
 				oldMenu = nextMenu
 				nextMenu = eval(results)
+                                if nextMenu is not None and 'commands' in nextMenu:
+                                    logger.info("Operations from table view {}".format(nextMenu))
+                                    DB_Orchestrator.perform_bulk_operations(eval(nextMenu)['commands'])
+                                    nextMenu = None
 
 				if nextMenu is None:
 					nextMenu = oldMenu
 				logger.info(nextMenu)
+
+				#Return back to main menu and login if database has been deleted
+				if nextMenu == 'DELETED':
+					ncurses.resetscreen()
+					break
 
 				location.append(nextMenu.get('location'))  #Add part of path to location
 				if nextMenu == storeold:
