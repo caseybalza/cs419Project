@@ -636,8 +636,11 @@ class NCursesHandler:
                 box.addstr(0, 22, "{:<1}".format("I"), curses.A_UNDERLINE)
                 box.addstr(0, 23, "{:<9}".format("nsert"))
 
+                box.addstr(0, 32, "{:<1}".format("S"), curses.A_UNDERLINE)
+                box.addstr(0, 33, "{:<9}".format("ort"))
+
                 try:
-                    box.addstr(0, 30, "{:50}".format(""))
+                    box.addstr(0, 40, "{:40}".format(""))
                 except:
                     pass
 
@@ -655,6 +658,7 @@ class NCursesHandler:
                 records.sort(key=lambda tup: tup[0])
                 numCols = len(schema)
                 numRows = len(records)
+                sortedOrder = ["Descending"] * numCols
                 maxEntitiesOnPage = 20
 
                 box = curses.newwin(maxEntitiesOnPage + 4, 80, 3, 0)
@@ -662,7 +666,7 @@ class NCursesHandler:
                 box.border('|','|','-','-','+','+','+','+')
                 box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
                 box.addstr(2, 2, "{:>4.4}".format(""), curses.A_UNDERLINE)
-                box.addstr(2, 6, "{:>24.20}".format(schema[0][0] if numCols > 0 else ""), curses.A_UNDERLINE)
+                box.addstr(2, 6, "{:>24.20}".format(schema[0][0] if numCols > 0 else ""), curses.A_UNDERLINE and highlightText)
                 box.addstr(2, 30, "{:>24.20}".format(schema[1][0] if numCols > 1 else ""), curses.A_UNDERLINE)
                 box.addstr(2, 54, "{:>24.20}".format(schema[2][0] if numCols > 2 else ""), curses.A_UNDERLINE)
                 box.keypad(1)
@@ -670,6 +674,7 @@ class NCursesHandler:
                 pages =  int(ceil(numRows / maxEntitiesOnPage))
                 self.logger.info("numRows: {}, numPages: {}".format(numRows, pages))
                 rowPosition = 1
+                selectedColumn = 0
                 columnPosition = 0
                 page = 1
                 for i in range(1, maxEntitiesOnPage + 1):
@@ -721,11 +726,19 @@ class NCursesHandler:
                                 page -= 1
                                 rowPosition = maxEntitiesOnPage + (maxEntitiesOnPage * (page - 1))
                     if x == curses.KEY_LEFT:
-                        if columnPosition > 0:
-                            columnPosition -= 1
+                        if columnPosition > 0 and selectedColumn % 3 == 0:
+                            columnPosition -= 3
+                        if selectedColumn > 0:
+                            selectedColumn -= 1
+
+
+                        #if columnPosition > 0:
+                            #columnPosition -= 1
                     if x == curses.KEY_RIGHT:
-                        if columnPosition < numCols - 3:
-                            columnPosition += 1
+                        if columnPosition < numCols - 3 and selectedColumn % 3 == 2:
+                            columnPosition += 3
+                        if selectedColumn < numCols - 1:
+                            selectedColumn += 1
                     #Help
                     if x == 72:
                         self.draw_table_help_box()
@@ -764,6 +777,15 @@ class NCursesHandler:
                             numRows = len(records)
                             pages =  int(ceil(numRows / maxEntitiesOnPage))
                             self.logger.info("Insert into table {}".format(tableName))
+                    #Sort
+                    if x == 83:
+                        if sortedOrder[selectedColumn] == "Ascending":
+                            records.sort(key=lambda tup: tup[selectedColumn], reverse=True)
+                            sortedOrder[selectedColumn] = "Descending"
+                        else:
+                            records.sort(key=lambda tup: tup[selectedColumn])
+                            sortedOrder[selectedColumn] = "Ascending"
+
                     if x == ord("\n") and numRows != 0:
                         self.logger.info("Row {} selected".format(rowPosition - 1))
                         #Item selected, does nothing currently
@@ -774,7 +796,10 @@ class NCursesHandler:
                     box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
                     box.addstr(2, 2, "{:>4.4}".format(""), curses.A_UNDERLINE)
                     for i in range(0, 3):
-                        box.addstr(2, 6 + (24 * i), "{:>24.20}".format(schema[i + columnPosition][0] if numCols > i + columnPosition else ""), curses.A_UNDERLINE)
+                        if i == selectedColumn % 3:
+                            box.addstr(2, 6 + (24 * i), "{:>24.20}".format(schema[i + columnPosition][0] if numCols > i + columnPosition else ""), curses.A_UNDERLINE and highlightText)
+                        else:
+                            box.addstr(2, 6 + (24 * i), "{:>24.20}".format(schema[i + columnPosition][0] if numCols > i + columnPosition else ""), curses.A_UNDERLINE)
 
                     for i in range(1 + (maxEntitiesOnPage * (page - 1)), maxEntitiesOnPage + 1 + (maxEntitiesOnPage * (page - 1))):
                         if (i + (maxEntitiesOnPage * (page - 1)) == rowPosition + (maxEntitiesOnPage * (page - 1))):
