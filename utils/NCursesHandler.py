@@ -562,7 +562,20 @@ class NCursesHandler:
                     inputwindow = curses.newwin(1, 48, 15, 4)
                     inputwindow.bkgd(' ', curses.color_pair(5))
                     inputtextbox = curses.textpad.Textbox(inputwindow)
-                    inputValue = inputtextbox.edit(self.insertInputValidator).rstrip('\n')
+                    inputValue = inputtextbox.edit(self.insertInputValidator).rstrip('\n').strip()
+                    if inputValue == '':
+                        inputValue = None
+                    elif 'int' in column[1]:
+                        inputValue = long(inputValue)
+                    elif 'double' in column[1]:
+                        inputValue = float(inputValue)
+                    elif 'varchar' in column[1]:
+                        maxlength = int(column[1].rsplit('(')[1].rsplit(')')[0])
+                        inputValue = str(inputValue[:maxlength])
+                    elif 'character' in column[1]:
+                        inputValue = str(inputValue[:column[2]])
+                    else:
+                        pass
                     curses.curs_set(0)
                     self.logger.info("Value entered, column: {}, value: {}".format(column[0], inputValue))
                     insertValues[column[0]] = inputValue
@@ -643,8 +656,11 @@ class NCursesHandler:
                 box.addstr(0, 22, "{:<1}".format("I"), curses.A_UNDERLINE)
                 box.addstr(0, 23, "{:<9}".format("nsert"))
 
+                box.addstr(0, 32, "{:<1}".format("S"), curses.A_UNDERLINE)
+                box.addstr(0, 33, "{:<9}".format("ort"))
+
                 try:
-                    box.addstr(0, 30, "{:50}".format(""))
+                    box.addstr(0, 40, "{:40}".format(""))
                 except:
                     pass
 
@@ -659,8 +675,10 @@ class NCursesHandler:
                 normalText = curses.A_NORMAL
                 schema = contents[0]
                 records = contents[1]
+                records.sort(key=lambda tup: tup[0])
                 numCols = len(schema)
                 numRows = len(records)
+                sortedOrder = ["Descending"] * numCols
                 maxEntitiesOnPage = 20
 
                 box = curses.newwin(maxEntitiesOnPage + 4, 80, 3, 0)
@@ -668,13 +686,15 @@ class NCursesHandler:
                 box.border('|','|','-','-','+','+','+','+')
                 box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
                 box.addstr(2, 2, "{:>4.4}".format(""), curses.A_UNDERLINE)
-                box.addstr(2, 6, "{:>24.20}".format(schema[0][0] if numCols > 0 else ""), curses.A_UNDERLINE)
+                box.addstr(2, 6, "{:>24.20}".format(schema[0][0] if numCols > 0 else ""), curses.A_UNDERLINE and highlightText)
                 box.addstr(2, 30, "{:>24.20}".format(schema[1][0] if numCols > 1 else ""), curses.A_UNDERLINE)
                 box.addstr(2, 54, "{:>24.20}".format(schema[2][0] if numCols > 2 else ""), curses.A_UNDERLINE)
                 box.keypad(1)
 
                 pages =  int(ceil(numRows / maxEntitiesOnPage))
+                self.logger.info("numRows: {}, numPages: {}".format(numRows, pages))
                 rowPosition = 1
+                selectedColumn = 0
                 columnPosition = 0
                 page = 1
                 for i in range(1, maxEntitiesOnPage + 1):
@@ -683,7 +703,7 @@ class NCursesHandler:
                     else:
                         textType = normalText
 
-                    box.addstr(i + 2, 2, str(i) + " - ", textType)
+                    box.addstr(i + 2, 2, str(i) + ":", textType)
 
                     for j in range(0, 3):
                         box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
@@ -712,24 +732,33 @@ class NCursesHandler:
                             if rowPosition < maxEntitiesOnPage + (maxEntitiesOnPage * (page - 1)):
                                 rowPosition += 1
                             else:
-                                page += 1
-                                rowPosition = 1 + (maxEntitiesOnPage * (page - 1))
+                                if rowPosition < numRows:
+                                    page += 1
+                                    rowPosition = 1 + (maxEntitiesOnPage * (page - 1))
                     if x == curses.KEY_UP:
                         if page == 1:
                             if rowPosition > 1:
                                 rowPosition -= 1
                         else:
-                            if rowPosition> (1 + (maxEntitiesOnPage * (page - 1))):
+                            if rowPosition > (1 + (maxEntitiesOnPage * (page - 1))):
                                 rowPosition -= 1
                             else:
                                 page -= 1
                                 rowPosition = maxEntitiesOnPage + (maxEntitiesOnPage * (page - 1))
                     if x == curses.KEY_LEFT:
-                        if columnPosition > 0:
-                            columnPosition -= 1
+                        if columnPosition > 0 and selectedColumn % 3 == 0:
+                            columnPosition -= 3
+                        if selectedColumn > 0:
+                            selectedColumn -= 1
+
+
+                        #if columnPosition > 0:
+                            #columnPosition -= 1
                     if x == curses.KEY_RIGHT:
-                        if columnPosition < numCols - 3:
-                            columnPosition += 1
+                        if columnPosition < numCols - 3 and selectedColumn % 3 == 2:
+                            columnPosition += 3
+                        if selectedColumn < numCols - 1:
+                            selectedColumn += 1
                     #Help
                     if x == 72:
                         self.draw_table_help_box()
@@ -741,14 +770,42 @@ class NCursesHandler:
                             self.logger.info("Commands list: {}".format(tableOperations['commands']))
                             del records[rowPosition - 1]
                             numRows = len(records)
+                            pages =  int(ceil(numRows / maxEntitiesOnPage))
                             self.logger.info("Delete row {}".format(rowPosition - 1))
+                            if rowPosition - 1 == numRows:
+                                if rowPosition > (1 + (maxEntitiesOnPage * (page - 1))):
+                                    rowPosition -= 1
+                                else:
+                                    page -= 1
+                                    rowPosition = maxEntitiesOnPage + (maxEntitiesOnPage * (page - 1))
                     #Update
                     if x == 85:
                         self.logger.info("Update row {}".format(rowPosition - 1))
                     #Insert
                     if x == 73:
-                        self.logger.info(self.draw_table_insert_box(schema, tableName))
-                        self.logger.info("Insert into table {}".format(tableName))
+                        insertValues = self.draw_table_insert_box(schema, tableName)
+                        if insertValues is not None:
+                            self.logger.info(insertValues)
+                            insertQuery = InsertQuery(schema, insertValues, tableName)
+                            self.logger.info(insertQuery)
+                            tableOperations['commands'].append(insertQuery)
+                            recordForViewing = []
+                            for column in schema:
+                                recordForViewing.append(insertValues[column[0]])
+                            records.append(tuple(recordForViewing))
+                            records.sort(key=lambda tup: tup[0])
+                            numRows = len(records)
+                            pages =  int(ceil(numRows / maxEntitiesOnPage))
+                            self.logger.info("Insert into table {}".format(tableName))
+                    #Sort
+                    if x == 83:
+                        if sortedOrder[selectedColumn] == "Ascending":
+                            records.sort(key=lambda tup: tup[selectedColumn], reverse=True)
+                            sortedOrder[selectedColumn] = "Descending"
+                        else:
+                            records.sort(key=lambda tup: tup[selectedColumn])
+                            sortedOrder[selectedColumn] = "Ascending"
+
                     if x == ord("\n") and numRows != 0:
                         self.logger.info("Row {} selected".format(rowPosition - 1))
                         #Item selected, does nothing currently
@@ -759,7 +816,10 @@ class NCursesHandler:
                     box.addstr(1, 2, "{} table".format(tableName), curses.A_UNDERLINE)
                     box.addstr(2, 2, "{:>4.4}".format(""), curses.A_UNDERLINE)
                     for i in range(0, 3):
-                        box.addstr(2, 6 + (24 * i), "{:>24.20}".format(schema[i + columnPosition][0] if numCols > i + columnPosition else ""), curses.A_UNDERLINE)
+                        if i == selectedColumn % 3:
+                            box.addstr(2, 6 + (24 * i), "{:>24.20}".format(schema[i + columnPosition][0] if numCols > i + columnPosition else ""), curses.A_UNDERLINE and highlightText)
+                        else:
+                            box.addstr(2, 6 + (24 * i), "{:>24.20}".format(schema[i + columnPosition][0] if numCols > i + columnPosition else ""), curses.A_UNDERLINE)
 
                     for i in range(1 + (maxEntitiesOnPage * (page - 1)), maxEntitiesOnPage + 1 + (maxEntitiesOnPage * (page - 1))):
                         if (i + (maxEntitiesOnPage * (page - 1)) == rowPosition + (maxEntitiesOnPage * (page - 1))):
@@ -767,12 +827,13 @@ class NCursesHandler:
                         else:
                             textType = normalText
 
-                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 2, str(i) + " - ", textType)
+                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 2, str(i) + ":", textType)
 
                         
                         for j in range(0, 3):
-                            box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
-                                str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
+                            if i - 1 < numRows:
+                                box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
+                                    str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
 
                         if i == numRows:
                             break

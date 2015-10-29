@@ -188,3 +188,4 @@ class DatabaseOrchestrator:
                 raise DatabaseCursorError("Cursor Operation failed")
         if self.databaseType == "MySQL":
             self.cursor.execute("SET FOREIGN_KEY_CHECKS=1;")
+        self.connectedDB.commit()
