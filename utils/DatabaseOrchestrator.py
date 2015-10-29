@@ -159,7 +159,8 @@ class DatabaseOrchestrator:
                 raise DatabaseCursorError("PostgresSQL - Delete database error")
     
     def perform_bulk_operations(self, operations):
-        self.cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+        if self.databaseType == "MySQL":
+            self.cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
         for operation in operations:
             try:
                 self.cursor.execute(operation)
@@ -167,4 +168,5 @@ class DatabaseOrchestrator:
                 self.logger.error("Underlying operation exception: {}".format(e))
                 self.logger.error("Operation: {} failed".format(operation))
                 raise DatabaseCursorError("Cursor Operation failed")
-        self.cursor.execute("SET FOREIGN_KEY_CHECKS=1;")
+        if self.databaseType == "MySQL":
+            self.cursor.execute("SET FOREIGN_KEY_CHECKS=1;")

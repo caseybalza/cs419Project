@@ -7,7 +7,7 @@ def DeleteQuery(schema, record, table):
 
         if index > 0:
             query += " AND "
-        if 'varchar' in schema[index][1]:
+        if 'varchar' in schema[index][1] or 'character' in schema[index][1]:
             queryFormatter = "{}='{}'"
         else:
             queryFormatter = "{}={}"
