@@ -161,7 +161,7 @@ class NCursesHandler:
 		self.stdscr.border(0)
 		self.stdscr.addstr(2,35, form['title'], curses.A_STANDOUT) # Title for this menu
 		self.stdscr.addstr(4,16, form['subtitle'], curses.A_BOLD) # Subtitle for this menu
-		self.stdscr.addstr(28,23, "Created By: Casey Balza, Daryle Cooke, & Nick Jurczak", curses.color_pair(13))
+		self.stdscr.addstr(28,23, "Created By: Casey Balza, Daryl Cooke, & Nick Jurczak", curses.color_pair(13))
 		self.stdscr.refresh()
 
 		#top menu bar
@@ -430,6 +430,78 @@ class NCursesHandler:
                     x = box.getch()
                 box.clear()
 
+        def insertInputValidator(self, char):
+                #If the user hits enter or arrow down, exit the edit() block
+                if char == 10 or char == curses.KEY_DOWN:
+                    return 7;
+                return char
+
+        def draw_table_insert_box(self, schema, table):
+                insertValues = {}
+                selectedValue = "Continue"
+
+                def redraw_table_insert_box(column, table, inputValue, selected):
+                    box.erase()
+                    box.box()
+                    box.border('|','|','-','-','+','+','+','+')
+                    box.addstr(1, 2, "{:^72.72}".format("Insert a new entry into the {} table".format(table)), curses.A_UNDERLINE)
+                    box.addstr(3, 2, "{:<32.32}".format("{}".format(column[0])), curses.A_UNDERLINE)
+                    if selected == "Cancel":
+                        box.addstr(8, 2, "{:^36}".format("Cancel"), curses.color_pair(3))
+                    else:
+                        box.addstr(8, 2, "{:^36}".format("Cancel"))
+
+                    if selected == "Continue":
+                        box.addstr(8, 38, "{:^36}".format("Continue"), curses.color_pair(3))
+                    else:
+                        box.addstr(8, 38, "{:^36}".format("Continue"))
+                    box.refresh()
+                    inputwindow = curses.newwin(1, 48, 15, 4)
+                    inputwindow.bkgd(' ', curses.color_pair(5))
+                    if inputValue != None:
+                        inputwindow.addstr(0, 0, "{:<38}".format(inputValue))
+                    inputwindow.refresh()
+
+                box = curses.newwin(10, 76, 10, 2)
+                box.keypad(1)
+                box.bkgd(' ', curses.color_pair(1))
+                box.box()
+                box.refresh()
+
+                for column in schema:
+                    redraw_table_insert_box(column, table, None, None)
+                    curses.curs_set(1)
+                    inputwindow = curses.newwin(1, 48, 15, 4)
+                    inputwindow.bkgd(' ', curses.color_pair(5))
+                    inputtextbox = curses.textpad.Textbox(inputwindow)
+                    inputValue = inputtextbox.edit(self.insertInputValidator).rstrip('\n')
+                    curses.curs_set(0)
+                    self.logger.info("Value entered, column: {}, value: {}".format(column[0], inputValue))
+                    insertValues[column[0]] = inputValue
+                    redraw_table_insert_box(column, table, inputValue, "Continue")
+                    x = box.getch()
+
+                    while True:
+                        if x == curses.KEY_LEFT:
+                            redraw_table_insert_box(column, table, inputValue, "Cancel")
+                            selectedValue = "Cancel"
+
+                        if x == curses.KEY_RIGHT:
+                            redraw_table_insert_box(column, table, inputValue, "Continue")
+                            selectedValue = "Continue"
+
+                        if x == ord('\n'):
+                            if selectedValue == "Cancel":
+                                box.clear()
+                                inputwindow.clear()
+                                return None
+                            break;
+                        x = box.getch()
+
+                box.clear()
+                inputwindow.clear()
+                return insertValues
+
         def draw_table_delete_confirmation_box(self):
                 selectedValue = "Yes"
                 box = curses.newwin(5, 20, 10, 30)
@@ -440,11 +512,10 @@ class NCursesHandler:
                 box.addstr(1, 2, "{:^16}".format("Delete?"), curses.A_UNDERLINE)
                 box.addstr(3, 2, "{:^8}".format("Yes"), curses.color_pair(3))
                 box.addstr(3, 10, "{:^8}".format("No"))
-                box.refresh()
                 x = box.getch()
                 while x != ord('\n'):
                     if x == curses.KEY_LEFT or x == curses.KEY_RIGHT:
-                        box.clear()
+                        box.erase()
                         box.box()
                         box.border('|','|','-','-','+','+','+','+')
                         box.addstr(1, 2, "{:^16}".format("Delete?"), curses.A_UNDERLINE)
@@ -588,6 +659,7 @@ class NCursesHandler:
                         self.logger.info("Update row {}".format(rowPosition - 1))
                     #Insert
                     if x == 73:
+                        self.logger.info(self.draw_table_insert_box(schema, tableName))
                         self.logger.info("Insert into table {}".format(tableName))
                     if x == ord("\n") and numRows != 0:
                         self.logger.info("Row {} selected".format(rowPosition - 1))
