@@ -32,7 +32,7 @@ class NCursesHandler:
 		self.stdscr2 = curses.newwin(3, 80, 0, 0)
 
 		#window help menu
-		self.stdscr3 = curses.newwin(18, 44, 7, 18)
+		self.stdscr3 = curses.newwin(21, 44, 7, 18)
 
 		#Create color pairs.
 		curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_YELLOW)
@@ -67,7 +67,7 @@ class NCursesHandler:
 
 	#Top Menu Bar
 	def top_bar_menu(self, location):
-                self.stdscr2.clear()
+		self.stdscr2.clear()
 		self.stdscr2.border(124, 124, 61, 61, 35, 35, 35, 35)
 		self.stdscr2.bkgd(' ', curses.color_pair(1))
 		self.stdscr2.addstr(1,2, 'Location:')
@@ -80,14 +80,23 @@ class NCursesHandler:
 	#end top_menu_bar
 
 	def help_window(self, new_menu, location, old_menu):
-		
+		self.stdscr3.clear()
 		self.stdscr3.border(0)
 		self.stdscr3.bkgd(' ', curses.color_pair(8))
-		self.stdscr3.addstr(3,2, 'The "Location" in the top menu bar tells')
-		self.stdscr3.addstr(4,2, 'you where you currently are in a SQL')
-		self.stdscr3.addstr(5,2, 'server.')
-		self.stdscr3.addstr(7,2, '"Shift + E" to exit program')
-		self.stdscr3.addstr(8,2, '"Shift + H" to to bring up help menu')
+		self.stdscr3.addstr(1,2, 'The "Location" in the top menu bar tells')
+		self.stdscr3.addstr(2,2, 'you where you currently are in a SQL')
+		self.stdscr3.addstr(3,2, 'server.')
+		self.stdscr3.addstr(5,2, 'COMMANDS')
+		self.stdscr3.addstr(6,2, '"Shift + E" to exit program')
+		self.stdscr3.addstr(7,2, '"Shift + H" to to bring up help menu')
+		self.stdscr3.addstr(9,2, 'IMPORTING DATABASE')
+		self.stdscr3.addstr(10,2, 'Importing a database appends .sql')
+		self.stdscr3.addstr(11,2, 'so just input the file name')
+		self.stdscr3.addstr(12,2, 'this file name will be the db name.')
+		self.stdscr3.addstr(13,2, 'Import files must be in databases dir')
+		self.stdscr3.addstr(15,2, 'EXPORTING DATABASE')
+		self.stdscr3.addstr(16,2, 'Exporting database files will go into')
+		self.stdscr3.addstr(17,2, 'the databases directory.')
 		self.stdscr.refresh()
 		self.stdscr2.refresh()
 		self.stdscr3.refresh()
@@ -95,9 +104,6 @@ class NCursesHandler:
 	#end help_window
 
 	def createDB_window(self, new_menu, location, old_menu, results):
-		self.stdscr.clear
-		self.stdscr2.clear
-		self.stdscr3.clear
 		self.stdscr3.border(0)
 		self.stdscr3.bkgd(' ', curses.color_pair(8))
 		self.stdscr3.addstr(3,2, 'Redirecting you back to Main Menu')
@@ -110,14 +116,10 @@ class NCursesHandler:
 		self.stdscr.refresh()
 		self.stdscr2.refresh()
 		self.stdscr3.refresh()
-		self.stdscr.clear
 		self.processmenu(new_menu, location, old_menu)
 	#end createDB_window
 
 	def deleteDB_window(self, new_menu, location, old_menu, results):
-		self.stdscr.clear
-		self.stdscr2.clear
-		self.stdscr3.clear
 		self.stdscr3.border(0)
 		self.stdscr3.bkgd(' ', curses.color_pair(8))
 		self.stdscr3.addstr(3,2, 'Redirecting you back to Main Menu')
@@ -132,14 +134,10 @@ class NCursesHandler:
 		self.stdscr.refresh()
 		self.stdscr2.refresh()
 		self.stdscr3.refresh()
-		self.stdscr.clear
 		self.processmenu(new_menu, location, old_menu)
 	#end deleteDB_window
 
 	def exportDB_window(self, new_menu, location, old_menu, results):
-		self.stdscr.clear
-		self.stdscr2.clear
-		self.stdscr3.clear
 		self.stdscr3.border(0)
 		self.stdscr3.bkgd(' ', curses.color_pair(8))
 		self.stdscr3.addstr(3,2, 'Export Database')
@@ -152,7 +150,6 @@ class NCursesHandler:
 		self.stdscr.refresh()
 		self.stdscr2.refresh()
 		self.stdscr3.refresh()
-		self.stdscr.clear
 		self.processmenu(new_menu, location, old_menu)
 	#end exportDB_window
 
@@ -403,7 +400,7 @@ class NCursesHandler:
 				if lastoption == "Close":
 					if pos==count:
 						textstyle = self.h
-					self.stdscr.addstr(23, 37,  "%s" % (lastoption), textstyle)
+					self.stdscr.addstr(26, 37,  "%s" % (lastoption), textstyle)
 					self.stdscr3.refresh()
 
 			x = self.stdscr.getch() # Gets user input
