@@ -416,6 +416,7 @@ class NCursesHandler:
         def draw_table_help_box(self):
                 box = curses.newwin(10, 40, 3, 20)
                 box.box()
+                box.bkgd(' ', curses.color_pair(1))
                 box.border('|','|','-','-','+','+','+','+')
                 box.addstr(1, 2, "{:^36}".format("Table View Help Menu"), curses.A_UNDERLINE)
                 box.addstr(3, 2, "{:<36}".format("Left arrow: scrolls columns left"))
@@ -428,6 +429,41 @@ class NCursesHandler:
                 while x != ord('\n'):
                     x = box.getch()
                 box.clear()
+
+        def draw_table_delete_confirmation_box(self):
+                selectedValue = "Yes"
+                box = curses.newwin(5, 20, 10, 30)
+                box.box()
+                box.bkgd(' ', curses.color_pair(1))
+                box.keypad(1)
+                box.border('|','|','-','-','+','+','+','+')
+                box.addstr(1, 2, "{:^16}".format("Delete?"), curses.A_UNDERLINE)
+                box.addstr(3, 2, "{:^8}".format("Yes"), curses.color_pair(3))
+                box.addstr(3, 10, "{:^8}".format("No"))
+                box.refresh()
+                x = box.getch()
+                while x != ord('\n'):
+                    if x == curses.KEY_LEFT or x == curses.KEY_RIGHT:
+                        box.clear()
+                        box.box()
+                        box.border('|','|','-','-','+','+','+','+')
+                        box.addstr(1, 2, "{:^16}".format("Delete?"), curses.A_UNDERLINE)
+
+                    if x == curses.KEY_LEFT:
+                        box.addstr(3, 2, "{:^8}".format("Yes"), curses.color_pair(3))
+                        box.addstr(3, 10, "{:^8}".format("No"))
+                        selectedValue = "Yes"
+
+                    if x == curses.KEY_RIGHT:
+                        box.addstr(3, 2, "{:^8}".format("Yes"))
+                        box.addstr(3, 10, "{:^8}".format("No"), curses.color_pair(3))
+                        selectedValue = "No"
+
+                    box.refresh()
+                    x = box.getch()
+
+                box.clear()
+                return selectedValue
 
         def draw_table_bottom_bar(self):
                 box = curses.newwin(1, 80, 27, 0)
@@ -540,11 +576,13 @@ class NCursesHandler:
                         self.draw_table_help_box()
                     #Delete
                     if x == 68:
-                        tableOperations['commands'].append(DeleteQuery(schema, records[rowPosition - 1], tableName))
-                        self.logger.info("Commands list: {}".format(tableOperations['commands']))
-                        del records[rowPosition - 1]
-                        numRows = len(records)
-                        self.logger.info("Delete row {}".format(rowPosition - 1))
+                        confirmation = self.draw_table_delete_confirmation_box()
+                        if confirmation == "Yes":
+                            tableOperations['commands'].append(DeleteQuery(schema, records[rowPosition - 1], tableName))
+                            self.logger.info("Commands list: {}".format(tableOperations['commands']))
+                            del records[rowPosition - 1]
+                            numRows = len(records)
+                            self.logger.info("Delete row {}".format(rowPosition - 1))
                     #Update
                     if x == 85:
                         self.logger.info("Update row {}".format(rowPosition - 1))
