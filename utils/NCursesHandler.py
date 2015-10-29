@@ -175,7 +175,7 @@ class NCursesHandler:
 			if pos==fieldcount:
 				if optionselect==index:
 					textstyle = self.h
-			self.stdscr.addstr(5+5*fieldcount,20+(index*20), "%s" % (form['options'][index]['title']), textstyle)
+			self.stdscr.addstr(5+5+fieldcount,20+(index*20), "%s" % (form['options'][index]['title']), textstyle)
 		self.stdscr.refresh()
 
 		for index in range(fieldcount):
@@ -199,9 +199,67 @@ class NCursesHandler:
 					results[index] = text.strip()
 				else:
 					results.append(text.strip())
-				index = next
+				#index = next
+			elif form['fields'][index]['type'] == Dictionary.SELECTION:
+				boxs.append(None)
+				wins.append(None)
+				while x !=ord('\n'):
+					if pos != oldpos:
+						self.stdscr.move(5+index, 20)
+						self.stdscr.clrtoeol()
+						oldpos = pos
+						textstyle = self.n
+						self.stdscr.addstr(5+index, 20, "%s" % (form['fields'][index]['title']), textstyle)
+						textstyle = self.h
+						self.stdscr.addstr(5+index, 20 + len(form['fields'][index]['title']), "%s" % (form['fields'][index]['choices'][pos]))
+						self.stdscr.refresh()
+					x = self.stdscr.getch()
+					if x == curses.KEY_RIGHT:
+						pos += 1
+						pos %= len(form['fields'][index]['choices'])
+					elif x == curses.KEY_LEFT:
+						if pos > 0:
+							pos -= 1
+						else:
+							pos = len(form['fields'][index]['choices']) - 1
+				results.append(form['fields'][index]['choices'][pos])
+				pos = 0
+				x = 0
+				oldpos = -1
+			elif form['fields'][index]['type'] == Dictionary.TRUEFALSE:
+				boxs.append(None)
+				wins.append(None)
+				while x !=ord('\n'):
+					if pos != oldpos:
+						self.stdscr.move(5+index, 20)
+						self.stdscr.clrtoeol()
+						oldpos = pos
+						textstyle = self.n
+						self.stdscr.addstr(5+index, 20, "%s" % (form['fields'][index]['title']), textstyle)
+						textstyle = self.h
+						if pos == 0:
+							self.stdscr.addstr(5+index, 20 + len(form['fields'][index]['title']), "FALSE")
+						else:
+							self.stdscr.addstr(5+index, 20 + len(form['fields'][index]['title']), "TRUE")
+						self.stdscr.refresh()
+					x = self.stdscr.getch()
+					if x == curses.KEY_RIGHT:
+						pos += 1
+						pos %= 2
+					elif x == curses.KEY_LEFT:
+						pos += 1
+						pos %= 2
+				if pos == 0:
+					results.append(False)
+				else:
+					results.append(True)
+				pos = 0
+				x = 0
+				oldpos = -1
+
 			else:
 				boxs.append(None)
+				wins.append(None)
 				results.append(form['fields'][index]['type']) #Used for deleting a database
 		sys.stdout.flush()
 		while x !=ord('\n'):
@@ -212,7 +270,7 @@ class NCursesHandler:
 
 					if pos==index:
 						textstyle = self.h
-					self.stdscr.addstr(5+5*fieldcount,20+(index*20), "%s" % (form['options'][index]['title']), textstyle)
+					self.stdscr.addstr(5+5+fieldcount,20+(index*20), "%s" % (form['options'][index]['title']), textstyle)
 				self.stdscr.refresh()
 
 			x = self.stdscr.getch()
@@ -229,12 +287,12 @@ class NCursesHandler:
 			elif x == 72:
 				return 'help'
 		if pos is 0:
-			return str(parent)
+			return 'back'
 		else:
-			#returnvalue['fields'] = results
-			#returnvalue['option'] = form['options'][pos]
-			return form['options'][pos]['command']+str(results)+')'
-
+			returnvalue['fields'] = results
+			returnvalue['option'] = form['options'][pos]
+			#return form['options'][pos]['command']+str(results)+')'
+			return returnvalue
 
 
 	# This function displays the appropriate menu and returns the option selected
@@ -395,6 +453,7 @@ class NCursesHandler:
 		else:
 			if parent is None:
 				parent = main_menu
+			fields = []
 			while (1):
 				getin = self.runform(menu, location, parent)
 				if getin == 'help':
@@ -407,8 +466,17 @@ class NCursesHandler:
 					saying = "No"
 					self.exit_window(exit_menu, "", saying)
 					self.stdscr.clear()
+				elif getin == 'back':
+					return str(parent)
+				elif getin['option']['command'] == 'continue':
+					fields.append(getin['fields'])
+					self.stdscr.clear()
 				else:
-					return getin
+					if not fields:
+						return getin['option']['command']+str(getin['fields'])+')'
+					else:
+						fields.append(getin['fields'])
+						return getin['option']['command']+str(fields)+')'
 			#return result['option']['command']
 			#return result['option']['command']+str(result['fields'])+')'
 	#end processmenu()
