@@ -136,6 +136,26 @@ class NCursesHandler:
 		self.processmenu(new_menu, location, old_menu)
 	#end deleteDB_window
 
+	def exportDB_window(self, new_menu, location, old_menu, results):
+		self.stdscr.clear
+		self.stdscr2.clear
+		self.stdscr3.clear
+		self.stdscr3.border(0)
+		self.stdscr3.bkgd(' ', curses.color_pair(8))
+		self.stdscr3.addstr(3,2, 'Database Exported')
+		
+		if results[0] == EXPORT_DB_ERROR:
+			self.stdscr3.addstr(10,2, results[0]) #Just output error message
+		else:
+			self.stdscr3.addstr(9,2, "Success! " + results[0] + " database exported." ) #output success message + db name
+
+		self.stdscr.refresh()
+		self.stdscr2.refresh()
+		self.stdscr3.refresh()
+		self.stdscr.clear
+		self.processmenu(new_menu, location, old_menu)
+	#end exportDB_window
+
 	#properly loads form, ,returns values entered
 	def runform(self, form, location, parent):
 

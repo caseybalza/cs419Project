@@ -58,12 +58,13 @@ def show_db_options(dbs):
 	logger.info("Inside show_db_options")
 	viewtables = os.path.join('show_tables(\"{}\")'.format(dbs))
 	deleteDB = os.path.join('loadDB_deleteform(\"{}\")'.format(dbs))
+	exportDB = os.path.join('loadDB_exportform(\"{}\")'.format(dbs))
 	db_options_menu = {
 	'title': dbs + " Database Options", 'type': Dictionary.MENU, 'subtitle': "Please select an action...",
 	'location': dbs ,'options':[
 				{ 'title': "View Tables", 'type': Dictionary.COMMAND, 'command': viewtables },
 				{ 'title': "Delete database", 'type': Dictionary.COMMAND, 'command': deleteDB },
-				{ 'title': "Export database", 'type': Dictionary.COMMAND, 'command': '' },
+				{ 'title': "Export database", 'type': Dictionary.COMMAND, 'command': exportDB },
 				{ 'title': "Create Table", 'type': Dictionary.COMMAND, 'command': str(createEntity_form)}
 			]#end of DB_options_menu
 	}#DB_options_menu
@@ -128,6 +129,20 @@ def login(type):
 	return ncurses.setuplogin(type)
 	#return login_form
 
+def exportDB(results):
+	logger.info("Inside exportDB")
+	ncurses.stdscr.clear()
+	ncurses.stdscr2.clear()
+	ncurses.stdscr3.clear()
+	
+	try:
+		DB_Orchestrator.export_database(results[0])
+	except:
+		results[0] = EXPORT_DB_ERROR
+	
+	ncurses.exportDB_window(exportDB_menu, "", "Close", results) #open exportDB_window
+	return 'EXPORTED'
+
 def deleteDB(results):
 	logger.info("Inside deleteDB")
 	ncurses.stdscr.clear()
@@ -169,6 +184,14 @@ def loadDB_deleteform(dbs):
 	form['fields'][1]['type'] = dbs
 	return form
 
+#Used to load form to get name of database to export and calls exportDB()
+def loadDB_exportform(dbs):
+	form = exportDB_form
+	function = 'exportDB('
+	form['options'][1]['command'] = function
+	form['fields'][0]['type'] = dbs
+	return form
+
 def mainFunction(screen): 
 	#MAIN PROGRAM
 	if stop == 0:
@@ -203,6 +226,12 @@ def mainFunction(screen):
 				if nextMenu == 'DELETED':
 					ncurses.resetscreen()
 					break
+
+				#After user exports database change value of nextMenu to view database options menu.
+				if nextMenu == 'EXPORTED':
+					ncurses.resetscreen()
+					nextMenu = storeold
+					
 
 				location.append(nextMenu.get('location'))  #Add part of path to location
 				if nextMenu == storeold:

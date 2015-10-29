@@ -3,6 +3,7 @@ import psycopg2
 import logging
 from DatabaseExceptions import *
 from Logger import get_logger
+import os
 
 class DatabaseOrchestrator:
 
@@ -157,6 +158,23 @@ class DatabaseOrchestrator:
             except:
                 self.logger.error(logging.exception("PostgresSQL - Delete database error"))
                 raise DatabaseCursorError("PostgresSQL - Delete database error")
+
+    def export_database(self, results):
+        self.logger.info("Inside export_database, databaseType: {}".format(self.databaseType))
+        if self.databaseType == "MySQL":
+            try:
+                #Export database in MySQL server to databases directory
+                 os.system('mysqldump -u root -p' + self.passwd + ' ' + results + ' > databases/' + results + '.sql')
+            except:
+                self.logger.error(logging.exception("MySQL - Export database error"))
+                raise DatabaseCursorError("MySQL - Export database error")
+        elif self.databaseType == "PostgresSQL":
+            try:
+                 #Export database in PostgreSQL server to databases directory
+                 os.system('mysqldump -u root -p' + self.passwd + ' ' + results + ' > databases/' + results + '.sql')
+            except:
+                self.logger.error(logging.exception("PostgresSQL - Export database error"))
+                raise DatabaseCursorError("PostgresSQL - Export database error")
     
     def perform_bulk_operations(self, operations):
         if self.databaseType == "MySQL":

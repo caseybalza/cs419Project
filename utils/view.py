@@ -38,6 +38,11 @@ deleteDB_menu = {
 	'options':[]#end of deleteDB_menu options
 }#end of deleteDB_menu
 
+exportDB_menu = {
+	'title': "Export Database", 'type': Dictionary.MENU, 'subtitle': "", 'location': '',
+	'options':[]#end of exportDB_menu options
+}#end of exportDB_menu
+
 login_form = {
 	'title': "Login", 'type': Dictionary.FORM, 'subtitle': "Please login to your db account", 'location': '',
 	'fields':[
@@ -91,4 +96,15 @@ deleteDB_form = {
 		{'title': "Back"},
 		{'title': "Continue", 'type': Dictionary.COMMAND, 'command': ''}
 	]
-	}
+}
+
+exportDB_form = {
+	'title': "Export this database?", 'type': Dictionary.FORM, 'subtitle': "Are you sure you want to export this database?", 'location': '',
+	'fields':[
+		{'title': "", 'type': ""}
+	],
+	'options': [
+		{'title': "Back"},
+		{'title': "Continue", 'type': Dictionary.COMMAND, 'command': ''}
+	]
+}
