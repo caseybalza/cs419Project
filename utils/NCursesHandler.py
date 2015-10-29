@@ -542,7 +542,20 @@ class NCursesHandler:
                     inputwindow = curses.newwin(1, 48, 15, 4)
                     inputwindow.bkgd(' ', curses.color_pair(5))
                     inputtextbox = curses.textpad.Textbox(inputwindow)
-                    inputValue = inputtextbox.edit(self.insertInputValidator).rstrip('\n')
+                    inputValue = inputtextbox.edit(self.insertInputValidator).rstrip('\n').strip()
+                    if inputValue == '':
+                        inputValue = None
+                    elif 'int' in column[1]:
+                        inputValue = long(inputValue)
+                    elif 'double' in column[1]:
+                        inputValue = float(inputValue)
+                    elif 'varchar' in column[1]:
+                        maxlength = int(column[1].rsplit('(')[1].rsplit(')')[0])
+                        inputValue = str(inputValue[:maxlength])
+                    elif 'character' in column[1]:
+                        inputValue = str(inputValue[:column[2]])
+                    else:
+                        pass
                     curses.curs_set(0)
                     self.logger.info("Value entered, column: {}, value: {}".format(column[0], inputValue))
                     insertValues[column[0]] = inputValue
@@ -639,6 +652,7 @@ class NCursesHandler:
                 normalText = curses.A_NORMAL
                 schema = contents[0]
                 records = contents[1]
+                records.sort(key=lambda tup: tup[0])
                 numCols = len(schema)
                 numRows = len(records)
                 maxEntitiesOnPage = 20
@@ -654,6 +668,7 @@ class NCursesHandler:
                 box.keypad(1)
 
                 pages =  int(ceil(numRows / maxEntitiesOnPage))
+                self.logger.info("numRows: {}, numPages: {}".format(numRows, pages))
                 rowPosition = 1
                 columnPosition = 0
                 page = 1
@@ -663,7 +678,7 @@ class NCursesHandler:
                     else:
                         textType = normalText
 
-                    box.addstr(i + 2, 2, str(i) + " - ", textType)
+                    box.addstr(i + 2, 2, str(i) + ":", textType)
 
                     for j in range(0, 3):
                         box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
@@ -692,14 +707,15 @@ class NCursesHandler:
                             if rowPosition < maxEntitiesOnPage + (maxEntitiesOnPage * (page - 1)):
                                 rowPosition += 1
                             else:
-                                page += 1
-                                rowPosition = 1 + (maxEntitiesOnPage * (page - 1))
+                                if rowPosition < numRows:
+                                    page += 1
+                                    rowPosition = 1 + (maxEntitiesOnPage * (page - 1))
                     if x == curses.KEY_UP:
                         if page == 1:
                             if rowPosition > 1:
                                 rowPosition -= 1
                         else:
-                            if rowPosition> (1 + (maxEntitiesOnPage * (page - 1))):
+                            if rowPosition > (1 + (maxEntitiesOnPage * (page - 1))):
                                 rowPosition -= 1
                             else:
                                 page -= 1
@@ -721,14 +737,33 @@ class NCursesHandler:
                             self.logger.info("Commands list: {}".format(tableOperations['commands']))
                             del records[rowPosition - 1]
                             numRows = len(records)
+                            pages =  int(ceil(numRows / maxEntitiesOnPage))
                             self.logger.info("Delete row {}".format(rowPosition - 1))
+                            if rowPosition - 1 == numRows:
+                                if rowPosition > (1 + (maxEntitiesOnPage * (page - 1))):
+                                    rowPosition -= 1
+                                else:
+                                    page -= 1
+                                    rowPosition = maxEntitiesOnPage + (maxEntitiesOnPage * (page - 1))
                     #Update
                     if x == 85:
                         self.logger.info("Update row {}".format(rowPosition - 1))
                     #Insert
                     if x == 73:
-                        self.logger.info(self.draw_table_insert_box(schema, tableName))
-                        self.logger.info("Insert into table {}".format(tableName))
+                        insertValues = self.draw_table_insert_box(schema, tableName)
+                        if insertValues is not None:
+                            self.logger.info(insertValues)
+                            insertQuery = InsertQuery(schema, insertValues, tableName)
+                            self.logger.info(insertQuery)
+                            tableOperations['commands'].append(insertQuery)
+                            recordForViewing = []
+                            for column in schema:
+                                recordForViewing.append(insertValues[column[0]])
+                            records.append(tuple(recordForViewing))
+                            records.sort(key=lambda tup: tup[0])
+                            numRows = len(records)
+                            pages =  int(ceil(numRows / maxEntitiesOnPage))
+                            self.logger.info("Insert into table {}".format(tableName))
                     if x == ord("\n") and numRows != 0:
                         self.logger.info("Row {} selected".format(rowPosition - 1))
                         #Item selected, does nothing currently
@@ -747,12 +782,13 @@ class NCursesHandler:
                         else:
                             textType = normalText
 
-                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 2, str(i) + " - ", textType)
+                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 2, str(i) + ":", textType)
 
                         
                         for j in range(0, 3):
-                            box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
-                                str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
+                            if i - 1 < numRows:
+                                box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
+                                    str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
 
                         if i == numRows:
                             break
