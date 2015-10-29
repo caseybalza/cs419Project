@@ -63,7 +63,8 @@ def show_db_options(dbs):
 	'location': dbs ,'options':[
 				{ 'title': "View Tables", 'type': Dictionary.COMMAND, 'command': viewtables },
 				{ 'title': "Delete database", 'type': Dictionary.COMMAND, 'command': deleteDB },
-				{ 'title': "Export database", 'type': Dictionary.COMMAND, 'command': '' }
+				{ 'title': "Export database", 'type': Dictionary.COMMAND, 'command': '' },
+				{ 'title': "Create Table", 'type': Dictionary.COMMAND, 'command': str(createEntity_form)}
 			]#end of DB_options_menu
 	}#DB_options_menu
 	
