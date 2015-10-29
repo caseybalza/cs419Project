@@ -43,6 +43,11 @@ exportDB_menu = {
 	'options':[]#end of exportDB_menu options
 }#end of exportDB_menu
 
+importDB_menu = {
+	'title': "Import Database", 'type': Dictionary.MENU, 'subtitle': "", 'location': '',
+	'options':[]#end of importDB_menu_menu options
+}#end of importDB_menu data
+
 login_form = {
 	'title': "Login", 'type': Dictionary.FORM, 'subtitle': "Please login to your db account", 'location': '',
 	'fields':[
@@ -102,6 +107,17 @@ exportDB_form = {
 	'title': "Export this database?", 'type': Dictionary.FORM, 'subtitle': "Are you sure you want to export this database?", 'location': '',
 	'fields':[
 		{'title': "", 'type': ""}
+	],
+	'options': [
+		{'title': "Back"},
+		{'title': "Continue", 'type': Dictionary.COMMAND, 'command': ''}
+	]
+}
+
+importDB_form = {
+	'title': "Import Database", 'type': Dictionary.FORM, 'subtitle': "Please enter the name of the database file to import", 'location': '',
+	'fields':[
+		{'title': "File Name: ", 'type': Dictionary.TEXT}
 	],
 	'options': [
 		{'title': "Back"},

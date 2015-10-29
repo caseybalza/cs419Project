@@ -87,7 +87,7 @@ def use_mysql(results):
 	mysql_menu['options'].append({ 'title': "Create Database", 'type': Dictionary.COMMAND, 'command': 'loadDB_createform()', 'location': "createDB" })
 
 	#Add Import Database option to top of menu
-	mysql_menu['options'].append({ 'title': "Import Database", 'type': Dictionary.COMMAND, 'command': 'importMySQLdb', 'location': "importDB" })
+	mysql_menu['options'].append({ 'title': "Import Database", 'type': Dictionary.COMMAND, 'command': 'loadDB_importform()', 'location': "importDB" })
 
 	databases = DB_Orchestrator.show_databases()
 	for database in databases:
@@ -109,7 +109,7 @@ def use_psql(results):
 	postgressql_menu['options'].append({ 'title': "Create Database", 'type': Dictionary.COMMAND, 'command': 'loadDB_createform()', 'location': "createDB" })
 
 	#Add Import Database option to top of menu
-	postgressql_menu['options'].append({ 'title': "Import Database", 'type': Dictionary.COMMAND, 'command': 'importPSQLdb', 'location': "importDB" })
+	postgressql_menu['options'].append({ 'title': "Import Database", 'type': Dictionary.COMMAND, 'command': 'loadDB_importform()', 'location': "importDB" })
 
 	databases = DB_Orchestrator.show_databases()
 	for database in databases:
@@ -128,6 +128,18 @@ def end_program(handler):
 def login(type):
 	return ncurses.setuplogin(type)
 	#return login_form
+
+def importDB(results):
+	logger.info("Inside importDB")
+	ncurses.stdscr.clear()
+	ncurses.stdscr2.clear()
+	ncurses.stdscr3.clear()
+	try:
+		DB_Orchestrator.import_database(results[0])
+	except:
+		results[0] = IMPORT_DB_ERROR
+	ncurses.importDB_window(importDB_menu, "", "Close", results) #open importDB_window
+	return 'IMPORTED'
 
 def exportDB(results):
 	logger.info("Inside exportDB")
@@ -192,6 +204,13 @@ def loadDB_exportform(dbs):
 	form['fields'][0]['type'] = dbs
 	return form
 
+#Used to load form to get name of database to import and calls importDB()
+def loadDB_importform():
+	form = importDB_form
+	function = 'importDB('
+	form['options'][1]['command'] = function
+	return form
+
 def mainFunction(screen): 
 	#MAIN PROGRAM
 	if stop == 0:
@@ -223,7 +242,7 @@ def mainFunction(screen):
 				logger.info(nextMenu)
 
 				#Return back to main menu and login if database has been deleted
-				if nextMenu == 'DELETED':
+				if nextMenu == 'DELETED' or nextMenu == 'IMPORTED':
 					ncurses.resetscreen()
 					break
 

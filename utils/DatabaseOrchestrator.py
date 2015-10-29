@@ -175,6 +175,29 @@ class DatabaseOrchestrator:
             except:
                 self.logger.error(logging.exception("PostgresSQL - Export database error"))
                 raise DatabaseCursorError("PostgresSQL - Export database error")
+
+    def import_database(self, results):
+        self.logger.info("Inside import_database, databaseType: {}".format(self.databaseType))
+        if self.databaseType == "MySQL":
+            try:
+                #Import database to MySQL server from databases directory
+                 os.system('mysql -u root -p' + self.passwd + ' < databases/' + results + '.sql')
+            except:
+                self.logger.error(logging.exception("MySQL - Import database error"))
+                raise DatabaseCursorError("MySQL - Import database error")
+        elif self.databaseType == "PostgresSQL":
+            try:
+                 #Must create db first.
+                 #Import database to PostgreSQL server from databases directory
+                 con = psycopg2.connect(dbname='postgres', user=self.user, host=self.host, password=self.passwd)
+                 con.autocommit = True
+                 cur = con.cursor()
+                 cur.execute("CREATE DATABASE " + results)
+                 os.system('psql -U' + self.user + ' ' + results + ' < databases/' + results + '.sql')
+                 con.close()
+            except:
+                self.logger.error(logging.exception("PostgresSQL - Import database error"))
+                raise DatabaseCursorError("PostgresSQL - Import database error")
     
     def perform_bulk_operations(self, operations):
         if self.databaseType == "MySQL":
