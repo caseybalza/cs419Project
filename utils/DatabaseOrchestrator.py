@@ -171,7 +171,7 @@ class DatabaseOrchestrator:
         elif self.databaseType == "PostgresSQL":
             try:
                  #Export database in PostgreSQL server to databases directory
-                 os.system('pg_dump -U' + self.user + ' ' + results + ' > databases/' + results + '.sql')
+                 os.system('pg_dump -C -U' + self.user + ' ' + results + ' > databases/' + results + '.sql')
             except:
                 self.logger.error(logging.exception("PostgresSQL - Export database error"))
                 raise DatabaseCursorError("PostgresSQL - Export database error")
