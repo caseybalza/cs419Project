@@ -1006,6 +1006,20 @@ class NCursesHandler:
 		self.stdscr.getch()
 	#end testfun()
 
+	def loginfail(self):
+		box = curses.newwin(7, 40, 8, 20)
+		box.box()
+		box.bkgd(' ', curses.color_pair(1))
+		box.border('|', '|', '-', '-', '+', '+', '+', '+')
+		box.addstr(2, 6, "Sorry, login unsuccessful", self.n)
+		box.addstr(4, 15, "Try Again", self.h)
+		box.refresh()
+		x = box.getch()
+		while x != ord('\n'):
+			x = box.getch()
+		box.clear()
+	#end loginfail()
+
 	def resetscreen(self):
 		self.stdscr.clear()
 		self.stdscr2.clear()

@@ -77,7 +77,12 @@ def use_mysql(results):
 	logger.info("Inside use_mysql")
 	#logininfo = eval(results)
 	logininfo = results
-	DB_Orchestrator.load("localhost", logininfo[0], logininfo[1], "", "MySQL")
+	try:
+		DB_Orchestrator.load("localhost", logininfo[0], logininfo[1], "", "MySQL")
+	except:
+		ncurses.loginfail()
+		return login(0)
+		
 	mysql_menu = {
 		'title': "MySql databases", 'type': Dictionary.MENU, 'subtitle': "Please select a database to use...",
 		'location': 'MySQL/', 'options':[]#end of menu options
@@ -99,7 +104,11 @@ def use_mysql(results):
 
 def use_psql(results):
 	logger.info("Inside use_psql")
-	DB_Orchestrator.load("", results[0], results[1], "postgres", "PostgresSQL")
+	try:
+		DB_Orchestrator.load("", results[0], results[1], "postgres", "PostgresSQL")
+	except:
+		ncurses.loginfail()
+		return login(1)
 	postgressql_menu = {
 		'title': "PostgresSQL databases", 'type': Dictionary.MENU, 'subtitle': "Please select a database to use...",
 		'location': 'PSQL/', 'options':[]#end of menu options
@@ -243,6 +252,10 @@ def mainFunction(screen):
 
 				#Return back to main menu and login if database has been deleted
 				if nextMenu == 'DELETED' or nextMenu == 'IMPORTED':
+					ncurses.resetscreen()
+					break
+
+				if nextMenu == main_menu:
 					ncurses.resetscreen()
 					break
 
