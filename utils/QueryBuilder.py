@@ -22,7 +22,7 @@ def InsertQuery(schema, values, table):
     vals = "("
     for index, column in enumerate(schema):
         if values[column[0]] is None:
-            break
+            continue
         cols += "{}".format(column[0])
         if type(values[column[0]]) is str:
             vals += "'{}'".format(str(values[column[0]]))
