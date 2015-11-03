@@ -193,7 +193,7 @@ class DatabaseOrchestrator:
                  con.autocommit = True
                  cur = con.cursor()
                  cur.execute("CREATE DATABASE " + results)
-                 os.system('psql -U' + self.user + ' ' + results + ' < databases/' + results + '.sql')
+                 os.system('psql -U' + self.user + ' ' + results + ' < databases/' + results + '.sql > /dev/null 2>&1')
                  con.close()
             except:
                 self.logger.error(logging.exception("PostgresSQL - Import database error"))
