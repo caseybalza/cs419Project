@@ -164,7 +164,7 @@ class DatabaseOrchestrator:
         if self.databaseType == "MySQL":
             try:
                 #Export database in MySQL server to databases directory
-                 os.system('mysqldump -u root -p' + self.passwd + ' ' + results + ' > databases/' + results + '.sql')
+                 os.system('mysqldump -u root --password=' + self.passwd + ' --databases ' + results + ' > databases/' + results + '.sql')
             except:
                 self.logger.error(logging.exception("MySQL - Export database error"))
                 raise DatabaseCursorError("MySQL - Export database error")
