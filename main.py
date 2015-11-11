@@ -34,7 +34,7 @@ def show_table_contents(table):
 	tableContents = DB_Orchestrator.get_table_for_viewing(table)
         location = "{}/{}/{}".format(DB_Orchestrator.databaseType, DB_Orchestrator.database, table)
 	logger.info("Displaying the {} table".format(table))
-	return ncurses.draw_table(table, tableContents, location)
+	return ncurses.draw_table(table, tableContents, location, False)
 
 def show_tables(dbs):
 	logger.info("Inside show_tables")
@@ -47,12 +47,24 @@ def show_tables(dbs):
 
 	tables = DB_Orchestrator.show_tables()
 
-	dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': Dictionary.COMMAND, 'command': 'testfun()' })
+	dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': Dictionary.COMMAND, 'command': 'custom_query()' })
 	for table in tables:
 		action = os.path.join('show_table_contents(\"{}\")'.format(table))
 		dbs_menu['options'].append({'title': table, 'type': Dictionary.COMMAND, 'command': action, 'location': table })
 	return dbs_menu
 #end show_tables(dbs)
+
+def custom_query():
+        query = ncurses.custom_query()
+        location = "{}/{}/CustomQuery".format(DB_Orchestrator.databaseType, DB_Orchestrator.database)
+        if query != "":
+            try:
+                queryResult = DB_Orchestrator.custom_query(query)
+            except:
+                logger.info("Woops, error in custom query, should probably show these to the user")
+                return None
+            return ncurses.draw_table("CustomQuery", queryResult, location, True)
+        return None
 
 def show_db_options(dbs):
 	logger.info("Inside show_db_options")

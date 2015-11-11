@@ -92,6 +92,27 @@ class DatabaseOrchestrator:
             raise DatabaseCursorError("Database query failed")
         return results
 
+    def custom_query(self, query):
+        self.logger.info("Inside custom_query, query: {}".format(query))
+        results = [[],[]]
+        if query[:6] != "SELECT":
+            return results
+
+        try:
+
+            self.cursor.execute(query)
+            for tupleResult in self.cursor.fetchall():
+                results[1].append(tupleResult)
+        except:
+            self.logger.error(logging.exception("MySQL&PostgresSQL - Custom query error"))
+            raise DatabaseCursorError("Database query failed")
+
+        for column in self.cursor.description:
+            results[0].append(column[:2])
+
+        #results.insert(0, self.cursor.description)
+        return results
+
     def get_table_schema(self, table):
         self.logger.info("Inside get_table_schema, table: {}".format(table))
         tableSchema = []
