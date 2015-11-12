@@ -5,6 +5,7 @@ from DatabaseExceptions import *
 from Logger import get_logger
 import os
 
+
 class DatabaseOrchestrator:
 
     def load(self, host, user, passwd, database, databaseType):
@@ -202,7 +203,7 @@ class DatabaseOrchestrator:
         if self.databaseType == "MySQL":
             try:
                 #Import database to MySQL server from databases directory
-                 os.system('mysql -u root -p' + self.passwd + ' < databases/' + results + '.sql')
+                os.system('mysql -u root -p' + self.passwd + ' < databases/' + results + '.sql')
             except:
                 self.logger.error(logging.exception("MySQL - Import database error"))
                 raise DatabaseCursorError("MySQL - Import database error")
