@@ -176,6 +176,10 @@ class NCursesHandler:
 	#properly loads form, ,returns values entered
 	def runform(self, form, location, parent):
 
+		#Don't allow Login to show in Location header in top menu bar
+		if location == "Login":
+			location = ""
+
 		fieldcount = len(form['fields'])# how many fields there are in the form
 		optioncount = len(form['options'])# how many options there are
 
