@@ -20,9 +20,9 @@ from utils.constants import *
 
 #Check if everything needed is installed and correct version, continue with program, else halt.
 
-stop = 0
 #stop = initiateProgram() #create instance of class initiateProgram
 #stop = stop.versionCheck() #call versionCheck on the instance.
+stop = 0
 
 DB_Orchestrator = DatabaseOrchestrator()
 ncurses = NCursesHandler()
@@ -34,7 +34,7 @@ def show_table_contents(table):
 	tableContents = DB_Orchestrator.get_table_for_viewing(table)
         location = "{}/{}/{}".format(DB_Orchestrator.databaseType, DB_Orchestrator.database, table)
 	logger.info("Displaying the {} table".format(table))
-	return ncurses.draw_table(table, tableContents, location, False)
+	return ncurses.draw_table(table, tableContents, location)
 
 def show_tables(dbs):
 	logger.info("Inside show_tables")
@@ -47,27 +47,16 @@ def show_tables(dbs):
 
 	tables = DB_Orchestrator.show_tables()
 
-	dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': Dictionary.COMMAND, 'command': 'custom_query()' })
+	dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': Dictionary.COMMAND, 'command': 'testfun()' })
 	for table in tables:
 		action = os.path.join('show_table_contents(\"{}\")'.format(table))
 		dbs_menu['options'].append({'title': table, 'type': Dictionary.COMMAND, 'command': action, 'location': table })
 	return dbs_menu
 #end show_tables(dbs)
 
-def custom_query():
-        query = ncurses.custom_query()
-        location = "{}/{}/CustomQuery".format(DB_Orchestrator.databaseType, DB_Orchestrator.database)
-        if query != "":
-            try:
-                queryResult = DB_Orchestrator.custom_query(query)
-            except:
-                logger.info("Woops, error in custom query, should probably show these to the user")
-                return None
-            return ncurses.draw_table("CustomQuery", queryResult, location, True)
-        return None
-
 def show_db_options(dbs):
 	logger.info("Inside show_db_options")
+	DB_Orchestrator.select_database(dbs)
 	viewtables = os.path.join('show_tables(\"{}\")'.format(dbs))
 	deleteDB = os.path.join('loadDB_deleteform(\"{}\")'.format(dbs))
 	exportDB = os.path.join('loadDB_exportform(\"{}\")'.format(dbs))
@@ -77,7 +66,7 @@ def show_db_options(dbs):
 				{ 'title': "View Tables", 'type': Dictionary.COMMAND, 'command': viewtables },
 				{ 'title': "Delete database", 'type': Dictionary.COMMAND, 'command': deleteDB },
 				{ 'title': "Export database", 'type': Dictionary.COMMAND, 'command': exportDB },
-				{ 'title': "Create Table", 'type': Dictionary.COMMAND, 'command': str(createEntity_form)}
+				{ 'title': "Create Table", 'type': Dictionary.COMMAND, 'command': str(createTable_form)}
 			]#end of DB_options_menu
 	}#DB_options_menu
 	
@@ -155,15 +144,9 @@ def importDB(results):
 	ncurses.stdscr.clear()
 	ncurses.stdscr2.clear()
 	ncurses.stdscr3.clear()
-	path = os.getcwd()
 	try:
 		DB_Orchestrator.import_database(results[0])
 	except:
-		results[0] = IMPORT_DB_ERROR
-
-	if os.path.isfile(path + "/databases/" + results[0] + ".sql"): #check that file exists
-		pass
-	else:
 		results[0] = IMPORT_DB_ERROR
 	ncurses.importDB_window(importDB_menu, "", "Close", results) #open importDB_window
 	return 'IMPORTED'
@@ -207,6 +190,37 @@ def createDB(results):
 	except:
 		results[0] = CREATE_DB_ERROR
 	ncurses.createDB_window(createDB_menu, "", "Close", results) #open createDB_window
+
+def createTable(results):
+	logger.info("Inside createTable")
+	query = 'CREATE TABLE '+DB_Orchestrator.database+'.`'+results[0]+'` ( '
+	queries = []
+
+	def getEntityStr(results):
+		entities = ''
+		for i in results:
+			entities += '`'+i[0]+'` '	#add name of column
+			entities +=i[1]			#add type of column
+			entities +='( '+i[2]+' ) '	#add size of column
+			entities +=i[4]			#add attributes of column
+			entities +=' COLLATE '+i[3]	#add collation of column
+			if i[5]:				#add NULL or NOT NULL to column
+				entities +=' NULL'
+			else:
+				entities +=' NOT NULL'
+			if i[6] != '':
+				entities += ' DEFAULT `'+i[6]
+			if i[8] is not 'NONE':			#add special characteristic to be appended to end
+				entities += ' '+i[8]
+			entities +=', '
+		entities = entities[:-2]#remove last comma from list of columns
+		return entities+' ) ENGINE = INNODB'
+	ncurses.resetscreen()
+
+	columns = eval(ncurses.processmenu(createEntity_form, ''))
+	queries.append(query+columns)
+	logger.info("Attempting Query: "+queries[0])
+	DB_Orchestrator.perform_bulk_operations(queries)
 
 #Used to load form to get name of new database to create and calls createDB()
 def loadDB_createform():
@@ -306,6 +320,7 @@ def mainFunction(screen):
 				results = ncurses.processmenu(nextMenu, str_location, oldMenu)
 				storeold = oldMenu
 				back_list_stack.append(nextMenu)
+
 
 
 curses.wrapper(mainFunction)

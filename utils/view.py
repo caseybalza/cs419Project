@@ -71,6 +71,17 @@ createDB_form = {
 	]
 }
 
+createTable_form = {
+	'title': "Create New Table", 'type': Dictionary.FORM, 'subtitle': "Please enter the name of your new table", 'location': '',
+	'fields':[
+		{'title': "New Database Name: ", 'type': Dictionary.TEXT}
+	],
+	'options': [
+		{'title': "Back"},
+		{'title': "Continue", 'type': Dictionary.COMMAND, 'command': 'createTable('}
+	]
+}
+
 createEntity_form = {
 	'title': "Add field", 'type': Dictionary.FORM, 'subtitle': "Please fill the following attributes", 'location': '',
 	'fields':[
@@ -86,7 +97,7 @@ createEntity_form = {
 	],
 	'options': [
 		{'title': "Back"},
-		{'title': "Finished", 'type': Dictionary.COMMAND, 'command': 'createTable('},
+		{'title': "Finished", 'type': Dictionary.COMMAND, 'command': 'getEntityStr('},
 		{'title': "Add Another Field", 'type': Dictionary.COMMAND, 'command': 'continue'}
 	]
 }
