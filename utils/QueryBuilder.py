@@ -91,7 +91,7 @@ def CreateTable(db, name, columns):
 		if columns[7]:
 			query += ' AUTO_INCREMENT'
 		if columns[6] != '':
-			query += ' DEFAULT `'+columns[6]
+			query += ' DEFAULT \''+columns[6]+'\''
 		if columns[8] is not 'NONE':			#add special characteristic of column
 			query += ' '+columns[8]
 		query +=', '
@@ -112,7 +112,7 @@ def CreateTable(db, name, columns):
 			if i[7]:
 				query += ' AUTO_INCREMENT'
 			if i[6] != '':
-				query += ' DEFAULT `'+i[6]
+				query += ' DEFAULT \''+i[6]+'\''
 			if i[8] is not 'NONE':			#add special characteristic of column
 				query += ' '+i[8]
 			query +=', '
