@@ -74,7 +74,7 @@ createDB_form = {
 createTable_form = {
 	'title': "Create New Table", 'type': Dictionary.FORM, 'subtitle': "Please enter the name of your new table", 'location': '',
 	'fields':[
-		{'title': "New Database Name: ", 'type': Dictionary.TEXT}
+		{'title': "New Table Name: ", 'type': Dictionary.TEXT}
 	],
 	'options': [
 		{'title': "Back"},
@@ -88,12 +88,12 @@ createEntity_form = {
 		{'title': "name: ", 'type': Dictionary.TEXT},
 		{'title': "type: ", 'type': Dictionary.SELECTION, 'choices':["VARCHAR", "TINYINT", "TEXT", "DATE", "SMALLINT", "MEDIUMINT", "INT", "BIGINT", "FLOAT", "DOUBLE", "DECIMAL", "DATETIME", "TIMESTAMP", "TIME", "YEAR", "CHAR", "TINYBLOB", "TINYTEXT", "BLOB", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT", "ENUM", "SET", "BIT", "BOOL", "BINARY", "VARBINARY"]},
 		{'title': "length/values: ", 'type': Dictionary.TEXT},
-		{'title': "collation: ", 'type': Dictionary.SELECTION, 'choices':["armscii8_bin", "armscii8_general_ci", "ascii_bin", "ascii_general_ci", "big5_bin", "big5_chinese_ci", "binary", "cp1250_bin", "cp1250_croatian_ci", "cp1250_czech_cs", "cp1250_general_ci", "cp1250_polish_ci", "cp1251_bin", "ujis_bin", "utf8_bin"]},
-		{'title': "attributes: ", 'type': Dictionary.SELECTION, 'choices':["BINARY", "UNSIGNED", "UNSIGNED ZEROFILL", "ON UPDATE CURRENT_TIMESTAMP"]},
+		{'title': "collation: ", 'type': Dictionary.SELECTION, 'choices':["", "armscii8_bin", "armscii8_general_ci", "ascii_bin", "ascii_general_ci", "big5_bin", "big5_chinese_ci", "binary", "cp1250_bin", "cp1250_croatian_ci", "cp1250_czech_cs", "cp1250_general_ci", "cp1250_polish_ci", "cp1251_bin", "ujis_bin", "utf8_bin"]},
+		{'title': "attributes: ", 'type': Dictionary.SELECTION, 'choices':["", "BINARY", "UNSIGNED", "UNSIGNED ZEROFILL", "ON UPDATE CURRENT_TIMESTAMP"]},
 		{'title': "NULL: ", 'type': Dictionary.TRUEFALSE},
 		{'title': "default: ", 'type': Dictionary.TEXT},
 		{'title': "auto increment: ", 'type': Dictionary.TRUEFALSE},
-		{'title': "special: ", 'type': Dictionary.SELECTION, 'choices':["NONE", "PRIMARY", "INDEX", "UNIQUE", "FULLTEXT"]}
+		{'title': "special: ", 'type': Dictionary.SELECTION, 'choices':["NONE", "PRIMARY KEY", "INDEX", "UNIQUE", "FULLTEXT"]}
 	],
 	'options': [
 		{'title': "Back"},

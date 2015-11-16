@@ -17,6 +17,7 @@ from utils.initiateProgram import initiateProgram
 from utils.NCursesHandler import NCursesHandler
 from utils.Logger import get_logger
 from utils.constants import *
+from utils.QueryBuilder import CreateTable
 
 #Check if everything needed is installed and correct version, continue with program, else halt.
 
@@ -38,7 +39,7 @@ def show_table_contents(table):
 
 def show_tables(dbs):
 	logger.info("Inside show_tables")
-	DB_Orchestrator.select_database(dbs)
+	#DB_Orchestrator.select_database(dbs)
 
 	dbs_menu = {
 	'title': dbs + " tables", 'type': Dictionary.MENU, 'subtitle': "Please select a table or action...",
@@ -193,32 +194,15 @@ def createDB(results):
 
 def createTable(results):
 	logger.info("Inside createTable")
-	query = 'CREATE TABLE '+DB_Orchestrator.database+'.`'+results[0]+'` ( '
 	queries = []
 
 	def getEntityStr(results):
-		entities = ''
-		for i in results:
-			entities += '`'+i[0]+'` '	#add name of column
-			entities +=i[1]			#add type of column
-			entities +='( '+i[2]+' ) '	#add size of column
-			entities +=i[4]			#add attributes of column
-			entities +=' COLLATE '+i[3]	#add collation of column
-			if i[5]:				#add NULL or NOT NULL to column
-				entities +=' NULL'
-			else:
-				entities +=' NOT NULL'
-			if i[6] != '':
-				entities += ' DEFAULT `'+i[6]
-			if i[8] is not 'NONE':			#add special characteristic to be appended to end
-				entities += ' '+i[8]
-			entities +=', '
-		entities = entities[:-2]#remove last comma from list of columns
-		return entities+' ) ENGINE = INNODB'
+		return results
 	ncurses.resetscreen()
 
 	columns = eval(ncurses.processmenu(createEntity_form, ''))
-	queries.append(query+columns)
+	query = CreateTable(DB_Orchestrator.database, results[0], columns)
+	queries.append(query)
 	logger.info("Attempting Query: "+queries[0])
 	DB_Orchestrator.perform_bulk_operations(queries)
 

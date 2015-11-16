@@ -72,3 +72,51 @@ def UpdateQuery(schema, values, record, table):
 
     query += ";"
     return query
+
+def CreateTable(db, name, columns):
+	query = 'CREATE TABLE '+db+'.`'+name+'` ( '
+	
+	if isinstance(columns[0], str):
+		query += '`'+columns[0]+'` '	#add name of column
+		query +=columns[1]			#add type of column
+		query +='( '+columns[2]+' ) '	#add size of column
+		if columns[4] !='':
+			query +=columns[4]		#add attributes of column
+		if columns[3] !='':
+			query +=' COLLATE '+columns[3]	#add collation of column
+		if columns[5]:				#add NULL or NOT NULL to column
+			query +=' NULL'
+		else:
+			query +=' NOT NULL'
+		if columns[7]:
+			query += ' AUTO_INCREMENT'
+		if columns[6] != '':
+			query += ' DEFAULT `'+columns[6]
+		if columns[8] is not 'NONE':			#add special characteristic of column
+			query += ' '+columns[8]
+		query +=', '
+		query = query[:-2]#remove last comma from list of columns
+	else:
+		for i in columns:
+			query += '`'+i[0]+'` '	#add name of column
+			query +=i[1]			#add type of column
+			query +='( '+i[2]+' ) '	#add size of column
+			if i[4] !='':
+				query +=i[4]		#add attributes of column
+			if i[3] !='':
+				query +=' COLLATE '+i[3]	#add collation of column
+			if i[5]:				#add NULL or NOT NULL to column
+				query +=' NULL'
+			else:
+				query +=' NOT NULL'
+			if i[7]:
+				query += ' AUTO_INCREMENT'
+			if i[6] != '':
+				query += ' DEFAULT `'+i[6]
+			if i[8] is not 'NONE':			#add special characteristic of column
+				query += ' '+i[8]
+			query +=', '
+		query = query[:-2]#remove last comma from list of columns
+	
+	query += ' ) ENGINE = INNODB'
+	return query
