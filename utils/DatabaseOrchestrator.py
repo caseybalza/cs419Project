@@ -5,7 +5,6 @@ from DatabaseExceptions import *
 from Logger import get_logger
 import os
 
-
 class DatabaseOrchestrator:
 
     def load(self, host, user, passwd, database, databaseType):
@@ -93,27 +92,6 @@ class DatabaseOrchestrator:
             raise DatabaseCursorError("Database query failed")
         return results
 
-    def custom_query(self, query):
-        self.logger.info("Inside custom_query, query: {}".format(query))
-        results = [[],[]]
-        if query[:6] != "SELECT":
-            return results
-
-        try:
-
-            self.cursor.execute(query)
-            for tupleResult in self.cursor.fetchall():
-                results[1].append(tupleResult)
-        except:
-            self.logger.error(logging.exception("MySQL&PostgresSQL - Custom query error"))
-            raise DatabaseCursorError("Database query failed")
-
-        for column in self.cursor.description:
-            results[0].append(column[:2])
-
-        #results.insert(0, self.cursor.description)
-        return results
-
     def get_table_schema(self, table):
         self.logger.info("Inside get_table_schema, table: {}".format(table))
         tableSchema = []
@@ -186,14 +164,14 @@ class DatabaseOrchestrator:
         if self.databaseType == "MySQL":
             try:
                 #Export database in MySQL server to databases directory
-                 os.system('mysqldump -u root --password=' + self.passwd + ' --databases ' + results + ' > databases/' + results + '.sql')
+                 os.system('mysqldump -u root -p' + self.passwd + ' ' + results + ' > databases/' + results + '.sql')
             except:
                 self.logger.error(logging.exception("MySQL - Export database error"))
                 raise DatabaseCursorError("MySQL - Export database error")
         elif self.databaseType == "PostgresSQL":
             try:
                  #Export database in PostgreSQL server to databases directory
-                 os.system('pg_dump -C -U' + self.user + ' ' + results + ' > databases/' + results + '.sql')
+                 os.system('pg_dump -U' + self.user + ' ' + results + ' > databases/' + results + '.sql')
             except:
                 self.logger.error(logging.exception("PostgresSQL - Export database error"))
                 raise DatabaseCursorError("PostgresSQL - Export database error")
@@ -203,7 +181,7 @@ class DatabaseOrchestrator:
         if self.databaseType == "MySQL":
             try:
                 #Import database to MySQL server from databases directory
-                os.system('mysql -u root -p' + self.passwd + ' < databases/' + results + '.sql')
+                 os.system('mysql -u root -p' + self.passwd + ' < databases/' + results + '.sql')
             except:
                 self.logger.error(logging.exception("MySQL - Import database error"))
                 raise DatabaseCursorError("MySQL - Import database error")
