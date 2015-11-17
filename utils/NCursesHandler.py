@@ -189,6 +189,9 @@ class NCursesHandler:
 		returnvalue = {'fields':None, 'option':None}
 		# Display all fields
 
+		if location == "Login":
+			location = ""
+
 		for index in range(fieldcount):
 		
 			if index < fieldcount:

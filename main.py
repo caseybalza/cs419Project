@@ -21,9 +21,10 @@ from utils.QueryBuilder import CreateTable
 
 #Check if everything needed is installed and correct version, continue with program, else halt.
 
+stop = 0
 #stop = initiateProgram() #create instance of class initiateProgram
 #stop = stop.versionCheck() #call versionCheck on the instance.
-stop = 0
+
 
 DB_Orchestrator = DatabaseOrchestrator()
 ncurses = NCursesHandler()
@@ -145,10 +146,18 @@ def importDB(results):
 	ncurses.stdscr.clear()
 	ncurses.stdscr2.clear()
 	ncurses.stdscr3.clear()
+	path = os.getcwd()
+
 	try:
 		DB_Orchestrator.import_database(results[0])
 	except:
 		results[0] = IMPORT_DB_ERROR
+
+	if os.path.isfile(path + "/databases/" + results[0] + ".sql"): #check that file exists
+		pass
+	else:
+		results[0] = IMPORT_DB_ERROR
+
 	ncurses.importDB_window(importDB_menu, "", "Close", results) #open importDB_window
 	return 'IMPORTED'
 
