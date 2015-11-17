@@ -148,13 +148,14 @@ def importDB(results):
 	ncurses.stdscr3.clear()
 	path = os.getcwd()
 
-	try:
-		DB_Orchestrator.import_database(results[0])
-	except:
-		results[0] = IMPORT_DB_ERROR
-
 	if os.path.isfile(path + "/databases/" + results[0] + ".sql"): #check that file exists
-		pass
+		try:
+			DB_Orchestrator.import_database(results[0])
+		except:
+			results[0] = IMPORT_DB_ERROR
+
+	#if os.path.isfile(path + "/databases/" + results[0] + ".sql"): #check that file exists
+	#	pass
 	else:
 		results[0] = IMPORT_DB_ERROR
 
