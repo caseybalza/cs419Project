@@ -172,6 +172,7 @@ class DatabaseOrchestrator:
                 raise DatabaseCursorError("MySQL - Delete database error")
         elif self.databaseType == "PostgresSQL":
             try:
+                self.connectedDB.close()#Must close previous connections in order to delete active db
                 con = psycopg2.connect(dbname='postgres', user=self.user, host=self.host, password=self.passwd)
                 con.autocommit = True
                 cur = con.cursor()
