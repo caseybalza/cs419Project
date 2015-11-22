@@ -119,6 +119,22 @@ class NCursesHandler:
 		self.processmenu(new_menu, location, old_menu)
 	#end createDB_window
 
+	def createTable_window(self, new_menu, location, old_menu, results):
+		self.stdscr3.border(0)
+		self.stdscr3.bkgd(' ', curses.color_pair(8))
+		self.stdscr3.addstr(3,2, 'Redirecting you back to Main Menu')
+
+		if results == CREATE_TABLE_ERROR:
+			self.stdscr3.addstr(10,2, results)
+		else:
+			self.stdscr3.addstr(9,2, "Success! Table created with command \"" + results + "\".")
+
+		self.stdscr.refresh()
+		self.stdscr2.refresh()
+		self.stdscr3.refresh()
+		self.processmenu(new_menu, location, old_menu)
+	#end createTable_window
+
 	def deleteDB_window(self, new_menu, location, old_menu, results):
 		self.stdscr3.border(0)
 		self.stdscr3.bkgd(' ', curses.color_pair(8))

@@ -33,6 +33,11 @@ createDB_menu = {
 	'options':[]#end of createDB_menu_menu options
 }#end of createDB_menu data
 
+createTable_menu = {
+	'title': "Create New Table", 'type': Dictionary.MENU, 'subtitle': "", 'location': '',
+	'options':[]#end of createTable_menu options
+}#end of createTable_menu data
+
 deleteDB_menu = {
 	'title': "Delete Database", 'type': Dictionary.MENU, 'subtitle': "", 'location': '',
 	'options':[]#end of deleteDB_menu options
