@@ -16,9 +16,18 @@ class DatabaseOrchestrator:
         self.databaseType = databaseType
         self.logger = get_logger("DatabaseOrchestrator")
         if databaseType == "MySQL":
-            self.connectedDB = MySQLdb.connect(host, user, passwd, database)
+            try:
+                self.connectedDB = MySQLdb.connect(host, user, passwd, database)
+            except:
+                self.logger.error(logging.exception("MySQL - Login failure"))
+                raise DatabaseConnectError("MySQL - Login failure")
+
         elif databaseType == "PostgresSQL":
-            self.connectedDB = psycopg2.connect("dbname=\'{}\' user=\'{}\'".format(database, user))
+            try:
+                self.connectedDB = psycopg2.connect("dbname=\'{}\' user=\'{}\'".format(database, user))
+            except:
+                self.logger.error(logging.exception("PostgresSQL - Login failure"))
+                raise DatabaseConnectError("PostgresSQL - Login failure")
         else:
             #Error occured here, no valid handling for databaseType given
             raise DatabaseTypeError(databaseType)

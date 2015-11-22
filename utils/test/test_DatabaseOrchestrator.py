@@ -1,0 +1,197 @@
+from ..DatabaseOrchestrator import DatabaseOrchestrator, MySQLdb, psycopg2
+from ..DatabaseExceptions import *
+import pytest
+import sys
+
+class dummy_bad_cursor:
+    results = []
+
+    def __call__(self):
+        return self
+
+    def execute(self, query):
+        raise DatabaseCursorError("Cursor error")
+    
+    def fetchall(self):
+        return self.results
+
+class dummy_cursor:
+    results = []
+
+    def __call__(self):
+        return self
+
+    def execute(self, query):
+        if query == "SHOW DATABASES" or query == "SELECT * FROM pg_database":
+            self.results = ['database1', 'database2', 'database3']
+        elif query == "SHOW TABLES" or query == "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'":
+            self.results = ['table1', 'table2', 'table3']
+        elif query[:8] == "DESCRIBE" or query[:18] == "SELECT column_name":
+            self.results = [('1','2','3'),('4','5','6'),('7','8','9')]
+        elif query[:8] == "SELECT *":
+            self.results = [('9','8','7'),('6','5','4'),('3','2','1')]
+        else:
+            return
+
+    def fetchall(self):
+        return self.results
+
+class dummy_MySQLdb_connection:
+    def __call__(self, host, user, passwd, database):
+        if host != "localhost" or user != "root" or passwd != "password":
+            raise DatabaseConnectError
+        return self
+
+    def cursor(self):
+        return dummy_cursor()
+
+class dummy_psycopg_connection:
+    def __call__(self, login_info):
+        if login_info != "dbname=\'\' user=\'ubuntu\'":
+            raise DatabaseConnectError
+        return self
+
+    def cursor(self):
+        return dummy_cursor()
+
+class TestMySQLDatabaseOrchestrator:
+    dbo = DatabaseOrchestrator()
+    MySQLdb.connect = dummy_MySQLdb_connection()
+
+    def test_load_MySQL(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+
+    def test_load_invalid_databaseType(self):
+        with pytest.raises(DatabaseTypeError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MicrosoftSQL')
+
+    def test_load_invalid_MySQL_Login(self):
+        with pytest.raises(DatabaseConnectError):
+            self.dbo.load('localhost', 'root', 'not_the_password', '', 'MySQL')
+
+    def test_show_databases_MySQL(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        assert type(self.dbo.show_databases()) is list
+
+    def test_show_databases_invalid_databaseType(self):
+        with pytest.raises(DatabaseTypeError):
+            try:
+                self.dbo.load('localhost', 'root', 'password', '', 'MicrosoftSQL')
+            except:
+                pass
+
+            self.dbo.show_databases()
+
+    def test_show_databases_MySQL_no_databases(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        assert type(self.dbo.show_databases()) is list
+
+    def test_show_tables(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.select_database('RandomDatabase')
+        assert type(self.dbo.show_tables()) is list
+
+    def test_show_tables_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            self.dbo.select_database('RandomDatabase')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.show_tables()
+    
+    def test_show_tables_invalid_databaseType(self):
+        with pytest.raises(DatabaseTypeError):
+            try:
+                self.dbo.load('localhost', 'root', 'password', '', 'MicrosoftSQL')
+            except:
+                pass
+            self.dbo.select_database('RandomDatabase')
+            self.dbo.show_tables()
+
+    def test_query_database(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.select_database('RandomDatabase')
+        assert type(self.dbo.query_database('RandomQuery')) is list
+
+    def test_query_database_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            self.dbo.select_database('RandomDatabase')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.query_database('RandomQuery')
+
+    def test_get_table_schema(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.select_database('RandomDatabase')
+        assert type(self.dbo.get_table_schema('RandomTable')) is list
+        assert type(self.dbo.get_table_schema('RandomTable')[0]) is tuple
+
+    def test_get_table_schema_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            self.dbo.select_database('RandomDatabase')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.get_table_schema('RandomTable')
+    
+    def test_get_table_for_viewing(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.select_database('RandomDatabase')
+        assert type(self.dbo.get_table_for_viewing('RandomTable')) is list
+        assert type(self.dbo.get_table_for_viewing('RandomTable')[0]) is list
+        assert type(self.dbo.get_table_for_viewing('RandomTable')[1]) is list
+        assert type(self.dbo.get_table_for_viewing('RandomTable')[0][0]) is tuple
+        assert type(self.dbo.get_table_for_viewing('RandomTable')[1][0]) is tuple
+
+    def test_get_table_for_viewing_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            self.dbo.select_database('RandomDatabase')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.get_table_for_viewing('RandomTable')
+
+    def test_create_database(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.create_database('NewDatabase')
+
+    def test_create_database_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.create_database('NewDatabase')
+
+    def test_delete_database(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.delete_database('RandomDatabase')
+
+    def test_delete_database_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.delete_database('RandomDatabase')
+        
+class TestPostgresSQLDatabaseOrchestrator:
+    dbo = DatabaseOrchestrator()
+    psycopg2.connect = dummy_psycopg_connection()
+
+    def test_load_PostgresSQL(self):
+        self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+
+    def test_load_invalid_databaseType(self):
+        with pytest.raises(DatabaseTypeError):
+            self.dbo.load('localhost', 'ubuntu', 'password', '', 'MicrosoftSQL')
+
+    def test_show_databases_PostgresSQL(self):
+        self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+        assert type(self.dbo.show_databases()) is list
+
+    def test_show_databases_invalid_databaseType(self):
+        with pytest.raises(DatabaseTypeError):
+            try:
+                self.dbo.load('localhost', 'ubuntu', 'password', '', 'MicrosoftSQL')
+            except:
+                pass
+            
+            self.dbo.show_databases()
+
+    def test_show_databases_PostgresSQL_no_databases(self):
+        self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+        assert type(self.dbo.show_databases()) is list
