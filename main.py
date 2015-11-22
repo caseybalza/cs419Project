@@ -214,7 +214,13 @@ def createTable(results):
 	query = CreateTable(DB_Orchestrator.database, results[0], columns)
 	queries.append(query)
 	logger.info("Attempting Query: "+queries[0])
-	DB_Orchestrator.perform_bulk_operations(queries)
+	
+	try:
+		DB_Orchestrator.perform_bulk_operations(queries)
+
+	except:
+		query = CREATE_TABLE_ERROR
+	ncurses.createTable_window(createTable_menu, "", "Close", query) #open createTable_window
 
 #Used to load form to get name of new database to create and calls createDB()
 def loadDB_createform():
