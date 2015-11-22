@@ -1,7 +1,6 @@
-from ..DatabaseOrchestrator import DatabaseOrchestrator, MySQLdb, psycopg2
+from ..DatabaseOrchestrator import DatabaseOrchestrator, MySQLdb, psycopg2, os
 from ..DatabaseExceptions import *
 import pytest
-import sys
 
 class dummy_bad_cursor:
     results = []
@@ -17,6 +16,7 @@ class dummy_bad_cursor:
 
 class dummy_cursor:
     results = []
+    description = [('a','b','c'),('d','e','f'),('g','h','i')]
 
     def __call__(self):
         return self
@@ -45,6 +45,9 @@ class dummy_MySQLdb_connection:
     def cursor(self):
         return dummy_cursor()
 
+    def commit(self):
+        return
+
 class dummy_psycopg_connection:
     def __call__(self, login_info):
         if login_info != "dbname=\'\' user=\'ubuntu\'":
@@ -54,9 +57,18 @@ class dummy_psycopg_connection:
     def cursor(self):
         return dummy_cursor()
 
+class dummy_system:
+    def __call__(self, call):
+        return
+
+class dummy_bad_system:
+    def __call__(self, call):
+        raise Exception
+
 class TestMySQLDatabaseOrchestrator:
     dbo = DatabaseOrchestrator()
     MySQLdb.connect = dummy_MySQLdb_connection()
+    os.system = dummy_system()
 
     def test_load_MySQL(self):
         self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
@@ -119,6 +131,22 @@ class TestMySQLDatabaseOrchestrator:
             self.dbo.cursor = dummy_bad_cursor()
             self.dbo.query_database('RandomQuery')
 
+    def test_custom_query(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.select_database('RandomDatabase')
+        assert type(self.dbo.custom_query('SELECT * FROM RandomTable')) is list
+        assert type(self.dbo.custom_query('SELECT * FROM RandomTable')[0]) is list
+        assert type(self.dbo.custom_query('SELECT * FROM RandomTable')[1]) is list
+        assert len(self.dbo.custom_query('INVALID QUERY')[0]) == 0
+        assert len(self.dbo.custom_query('INVALID QUERY')[1]) == 0
+
+    def test_custom_query_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            self.dbo.select_database('RandomDatabase')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.custom_query('SELECT * FROM RandomTable')
+
     def test_get_table_schema(self):
         self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
         self.dbo.select_database('RandomDatabase')
@@ -167,6 +195,39 @@ class TestMySQLDatabaseOrchestrator:
             self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
             self.dbo.cursor = dummy_bad_cursor()
             self.dbo.delete_database('RandomDatabase')
+
+    def test_export_database(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.export_database('RandomDatabase')
+
+    def test_export_database_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            os.system = dummy_bad_system()
+            self.dbo.export_database('RandomDatabase')
+
+    def test_import_database(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        os.system = dummy_system()
+        self.dbo.import_database('RandomDatabase')
+
+    def test_import_database_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            os.system = dummy_bad_system()
+            self.dbo.import_database('RandomDatabase')
+
+    def test_perform_bulk_operations(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.select_database('RandomDatabase')
+        self.dbo.perform_bulk_operations(['INSERT SOMETHING INTO SOMETHING', 'UPDATE SOMETHING WHERE SOMETHING IS SOMETHING'])
+
+    def test_perform_bulk_operations_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            self.dbo.select_database('RandomDatabase')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.perform_bulk_operations(['INSERT SOMETHING INTO SOMETHING', 'UPDATE SOMETHING WHERE SOMETHING IS SOMETHING'])
         
 class TestPostgresSQLDatabaseOrchestrator:
     dbo = DatabaseOrchestrator()
