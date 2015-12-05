@@ -849,11 +849,11 @@ class NCursesHandler:
                     else:
                         textType = normalText
 
-                    box.addstr(i + 2, 2, str(i) + ":", textType)
-
-                    for j in range(0, 3):
-                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
-                            str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
+                    if numRows > i - 1:
+                        box.addstr(i + 2, 2, str(i) + ":", textType)
+                        for j in range(0, 3):
+                            box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
+                                str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
 
                     if i == numRows:
                         break
@@ -985,12 +985,11 @@ class NCursesHandler:
                         else:
                             textType = normalText
 
-                        box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 2, str(i) + ":", textType)
-
-                        
-                        for j in range(0, 3):
-                            if i - 1 < numRows:
-                                box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
+                        if numRows > i - 1:
+                            box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 2, str(i) + ":", textType)
+                            for j in range(0, 3):
+                                if i - 1 < numRows:
+                                    box.addstr(i + 2 - (maxEntitiesOnPage * (page - 1)), 6 + (24 * j), "{:>24.20}".format(
                                     str(records[i - 1][j + columnPosition]) if numCols > j + columnPosition else ""), normalText)
 
                         if i == numRows:

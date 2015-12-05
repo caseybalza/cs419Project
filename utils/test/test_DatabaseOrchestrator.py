@@ -1,7 +1,6 @@
-from ..DatabaseOrchestrator import DatabaseOrchestrator, MySQLdb, psycopg2
+from ..DatabaseOrchestrator import DatabaseOrchestrator, MySQLdb, psycopg2, os
 from ..DatabaseExceptions import *
 import pytest
-import sys
 
 class dummy_bad_cursor:
     results = []
@@ -17,6 +16,7 @@ class dummy_bad_cursor:
 
 class dummy_cursor:
     results = []
+    description = [('a','b','c'),('d','e','f'),('g','h','i')]
 
     def __call__(self):
         return self
@@ -31,7 +31,7 @@ class dummy_cursor:
         elif query[:8] == "SELECT *":
             self.results = [('9','8','7'),('6','5','4'),('3','2','1')]
         else:
-            return
+            return []
 
     def fetchall(self):
         return self.results
@@ -45,6 +45,9 @@ class dummy_MySQLdb_connection:
     def cursor(self):
         return dummy_cursor()
 
+    def commit(self):
+        return
+
 class dummy_psycopg_connection:
     def __call__(self, login_info):
         if login_info != "dbname=\'\' user=\'ubuntu\'":
@@ -54,9 +57,18 @@ class dummy_psycopg_connection:
     def cursor(self):
         return dummy_cursor()
 
+class dummy_system:
+    def __call__(self, call):
+        return
+
+class dummy_bad_system:
+    def __call__(self, call):
+        raise Exception
+
 class TestMySQLDatabaseOrchestrator:
     dbo = DatabaseOrchestrator()
     MySQLdb.connect = dummy_MySQLdb_connection()
+    os.system = dummy_system()
 
     def test_load_MySQL(self):
         self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
@@ -119,6 +131,22 @@ class TestMySQLDatabaseOrchestrator:
             self.dbo.cursor = dummy_bad_cursor()
             self.dbo.query_database('RandomQuery')
 
+    def test_custom_query(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.select_database('RandomDatabase')
+        assert type(self.dbo.custom_query('SELECT * FROM RandomTable')) is list
+        assert type(self.dbo.custom_query('SELECT * FROM RandomTable')[0]) is list
+        assert type(self.dbo.custom_query('SELECT * FROM RandomTable')[1]) is list
+        assert len(self.dbo.custom_query('INVALID QUERY')[0]) == 0
+        assert len(self.dbo.custom_query('INVALID QUERY')[1]) == 0
+
+    def test_custom_query_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            self.dbo.select_database('RandomDatabase')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.custom_query('SELECT * FROM RandomTable')
+
     def test_get_table_schema(self):
         self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
         self.dbo.select_database('RandomDatabase')
@@ -167,10 +195,44 @@ class TestMySQLDatabaseOrchestrator:
             self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
             self.dbo.cursor = dummy_bad_cursor()
             self.dbo.delete_database('RandomDatabase')
+
+    def test_export_database(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.export_database('RandomDatabase')
+
+    def test_export_database_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            os.system = dummy_bad_system()
+            self.dbo.export_database('RandomDatabase')
+
+    def test_import_database(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        os.system = dummy_system()
+        self.dbo.import_database('RandomDatabase')
+
+    def test_import_database_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            os.system = dummy_bad_system()
+            self.dbo.import_database('RandomDatabase')
+
+    def test_perform_bulk_operations(self):
+        self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+        self.dbo.select_database('RandomDatabase')
+        self.dbo.perform_bulk_operations(['INSERT SOMETHING INTO SOMETHING', 'UPDATE SOMETHING WHERE SOMETHING IS SOMETHING'])
+
+    def test_perform_bulk_operations_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'root', 'password', '', 'MySQL')
+            self.dbo.select_database('RandomDatabase')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.perform_bulk_operations(['INSERT SOMETHING INTO SOMETHING', 'UPDATE SOMETHING WHERE SOMETHING IS SOMETHING'])
         
 class TestPostgresSQLDatabaseOrchestrator:
     dbo = DatabaseOrchestrator()
     psycopg2.connect = dummy_psycopg_connection()
+    os.system = dummy_system()
 
     def test_load_PostgresSQL(self):
         self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
@@ -179,7 +241,7 @@ class TestPostgresSQLDatabaseOrchestrator:
         with pytest.raises(DatabaseTypeError):
             self.dbo.load('localhost', 'ubuntu', 'password', '', 'MicrosoftSQL')
 
-    def test_show_databases_PostgresSQL(self):
+    def test_show_databases(self):
         self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
         assert type(self.dbo.show_databases()) is list
 
@@ -192,6 +254,73 @@ class TestPostgresSQLDatabaseOrchestrator:
             
             self.dbo.show_databases()
 
-    def test_show_databases_PostgresSQL_no_databases(self):
+    def test_show_databases_no_databases(self):
         self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
         assert type(self.dbo.show_databases()) is list
+
+    def test_show_tables(self):
+        self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+        assert type(self.dbo.show_tables()) is list
+
+    def test_show_tables_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.show_tables()
+
+    def test_show_tables_invalid_databaseType(self):
+        with pytest.raises(DatabaseTypeError):
+            try:
+                self.dbo.load('localhost', 'ubuntu', 'password', '', 'MicrosoftSQL')
+            except:
+                pass
+            self.dbo.show_tables()
+
+    def test_query_database(self):
+        self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+        assert type(self.dbo.query_database('RandomQuery')) is list
+
+    def test_query_database_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.query_database('RandomQuery')
+
+    def test_custom_query(self):
+        self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+        assert type(self.dbo.custom_query('SELECT * FROM RandomTable')) is list
+        assert type(self.dbo.custom_query('SELECT * FROM RandomTable')[0]) is list
+        assert type(self.dbo.custom_query('SELECT * FROM RandomTable')[1]) is list
+        assert len(self.dbo.custom_query('INVALID QUERY')[0]) == 0
+        assert len(self.dbo.custom_query('INVALID QUERY')[1]) == 0
+
+    def test_custom_query_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.custom_query('SELECT * FROM RandomTable')
+
+    def test_get_table_schema(self):
+        self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+        assert type(self.dbo.get_table_schema('RandomTable')) is list
+        assert type(self.dbo.get_table_schema('RandomTable')[0]) is tuple
+
+    def test_get_table_schema_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.get_table_schema('RandomTable')
+
+    def test_get_table_for_viewing(self):
+        self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+        assert type(self.dbo.get_table_for_viewing('RandomTable')) is list
+        assert type(self.dbo.get_table_for_viewing('RandomTable')[0]) is list
+        assert type(self.dbo.get_table_for_viewing('RandomTable')[1]) is list
+        assert type(self.dbo.get_table_for_viewing('RandomTable')[0][0]) is tuple
+        assert type(self.dbo.get_table_for_viewing('RandomTable')[1][0]) is tuple
+
+    def test_get_table_for_viewing_failure(self):
+        with pytest.raises(DatabaseCursorError):
+            self.dbo.load('localhost', 'ubuntu', 'password', '', 'PostgresSQL')
+            self.dbo.cursor = dummy_bad_cursor()
+            self.dbo.get_table_for_viewing('RandomTable')
