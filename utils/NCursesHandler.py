@@ -784,7 +784,7 @@ class NCursesHandler:
                 box.clear()
                 return selectedValue
 
-        def draw_table_bottom_bar(self):
+        def draw_table_bottom_bar(self, queriedTable):
                 box = curses.newwin(1, 80, 27, 0)
                 box.box()
                 box.bkgd(' ', curses.color_pair(1))
@@ -793,14 +793,16 @@ class NCursesHandler:
                 except:
                     pass
 
-                box.addstr(0, 2, "{:<1}".format("D"), curses.A_UNDERLINE and curses.color_pair(3))
-                box.addstr(0, 3, "{:<9}".format("elete"))
+		if not queriedTable:
+			box.addstr(0, 2, "{:<1}".format("D"), curses.A_UNDERLINE and curses.color_pair(3))
+			box.addstr(0, 3, "{:<9}".format("elete"))
+			box.addstr(0, 12, "{:<1}".format("U"), curses.A_UNDERLINE and curses.color_pair(3))
+			box.addstr(0, 13, "{:<9}".format("pdate"))
+			box.addstr(0, 22, "{:<1}".format("I"), curses.A_UNDERLINE and curses.color_pair(3))
+			box.addstr(0, 23, "{:<9}".format("nsert"))
 
-                box.addstr(0, 12, "{:<1}".format("U"), curses.A_UNDERLINE and curses.color_pair(3))
-                box.addstr(0, 13, "{:<9}".format("pdate"))
-
-                box.addstr(0, 22, "{:<1}".format("I"), curses.A_UNDERLINE and curses.color_pair(3))
-                box.addstr(0, 23, "{:<9}".format("nsert"))
+		else:
+			box.addstr(0, 2, "{:30}".format(""))
 
                 box.addstr(0, 32, "{:<1}".format("S"), curses.A_UNDERLINE and curses.color_pair(3))
                 box.addstr(0, 33, "{:<9}".format("ort"))
@@ -812,10 +814,10 @@ class NCursesHandler:
 
                 box.refresh()
 
-        def draw_table(self, tableName, contents, location):
+        def draw_table(self, tableName, contents, location, queriedTable):
                 tableOperations = dict()
                 tableOperations['commands'] = []
-                self.draw_table_bottom_bar()
+                self.draw_table_bottom_bar(queriedTable)
                 curses.curs_set(0)
                 highlightText = curses.color_pair(3)
                 normalText = curses.A_NORMAL
@@ -906,7 +908,7 @@ class NCursesHandler:
                     if x == 72:
                         self.draw_table_help_box()
                     #Delete
-                    if x == 68:
+                    if x == 68 and not queriedTable:
                         confirmation = self.draw_table_delete_confirmation_box()
                         if confirmation == "Yes":
                             tableOperations['commands'].append(DeleteQuery(schema, records[rowPosition - 1], tableName))
@@ -922,7 +924,7 @@ class NCursesHandler:
                                     page -= 1
                                     rowPosition = maxEntitiesOnPage + (maxEntitiesOnPage * (page - 1))
                     #Update
-                    if x == 85:
+                    if x == 85 and not queriedTable:
                         self.logger.info("Update row {}".format(rowPosition - 1))
                         updateValues = self.draw_table_update_box(schema, records[rowPosition - 1], tableName)
                         if updateValues is not None:
@@ -940,7 +942,7 @@ class NCursesHandler:
                             self.logger.info("Update record in table {}".format(tableName))
 
                     #Insert
-                    if x == 73:
+                    if x == 73 and not queriedTable:
                         insertValues = self.draw_table_insert_box(schema, tableName)
                         if insertValues is not None:
                             self.logger.info(insertValues)
@@ -1016,6 +1018,46 @@ class NCursesHandler:
 	# Starts program with main menu
 	def startmenu(self):
 		return self.processmenu(main_menu, "", None)
+
+	def custom_query(self):
+           curses.curs_set(0)
+           box = curses.newwin(10, 76, 5, 2)
+           box.keypad(1)
+           box.bkgd(' ', curses.color_pair(1))
+           box.box()
+           box.border('|', '|', '-', '-', '+', '+', '+', '+')
+           box.addstr(1, 1, "{:^74}".format("Input a custom SQL query"), curses.A_UNDERLINE)
+           box.addstr(8, 1, "{:^37}".format("Cancel"))
+           box.addstr(8, 38, "{:^37}".format("Query"))
+           box.refresh()
+
+           inputwindow = curses.newwin(4, 72, 8, 4)
+           inputwindow.bkgd(' ', curses.color_pair(5))
+           inputtextbox = curses.textpad.Textbox(inputwindow)
+           inputValue = inputtextbox.edit(self.insertInputValidator).rstrip().strip()
+           inputValue = inputValue.replace('\n', '')
+           #print inputValue
+           selectedValue = "Query"
+           box.addstr(8, 38, "{:^37}".format("Query"), curses.color_pair(3))
+           x = box.getch()
+           while x != ord('\n'):
+               if x == curses.KEY_LEFT:
+                   selectedValue = "Cancel"
+                   box.addstr(8, 1, "{:^37}".format("Cancel"), curses.color_pair(3))
+                   box.addstr(8, 38, "{:^37}".format("Query"))
+
+               if x == curses.KEY_RIGHT:
+                   selectedValue = "Query"
+                   box.addstr(8, 1, "{:^37}".format("Cancel"))
+                   box.addstr(8, 38, "{:^37}".format("Query"), curses.color_pair(3))
+
+               box.refresh()
+               x = box.getch()
+
+           if selectedValue == "Cancel":
+               return None
+           else:
+               return inputValue
 
 	def testfun(self):
 		self.stdscr.clear()
