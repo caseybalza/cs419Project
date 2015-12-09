@@ -87,6 +87,17 @@ createTable_form = {
 	]
 }
 
+dropTable_form = {
+	'title': "Drop Table", 'type': Dictionary.FORM, 'subtitle': "Please enter the name of the table you with to delete", 'location': '',
+	'fields':[
+		{'title': "Table Name: ", 'type': Dictionary.TEXT}
+	],
+	'options': [
+		{'title': "Back"},
+		{'title': "Drop", 'type': Dictionary.COMMAND, 'command': 'dropTable('}
+	]
+}
+
 createEntity_form = {
 	'title': "Add field", 'type': Dictionary.FORM, 'subtitle': "Please fill the following attributes", 'location': '',
 	'fields':[

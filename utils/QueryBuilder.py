@@ -73,11 +73,16 @@ def UpdateQuery(schema, values, record, table):
     query += ";"
     return query
 
-def CreateTable(db, name, columns):
-	query = 'CREATE TABLE '+db+'.`'+name+'` ( '
+def CreateTable(db, name, columns, type):
+	separator = ""
+	if type == "MySQL":
+		separator = '`'
+	elif type == "PostgresSQL":
+		separator = '\"'
+	query =separator+name+separator+' ( '
 	
 	if isinstance(columns[0], str):
-		query += '`'+columns[0]+'` '	#add name of column
+		query += separator+columns[0]+separator+' '	#add name of column
 		query +=columns[1]			#add type of column
 		query +='( '+columns[2]+' ) '	#add size of column
 		if columns[4] !='':
@@ -98,7 +103,7 @@ def CreateTable(db, name, columns):
 		query = query[:-2]#remove last comma from list of columns
 	else:
 		for i in columns:
-			query += '`'+i[0]+'` '	#add name of column
+			query += separator+i[0]+separator+' '	#add name of column
 			query +=i[1]			#add type of column
 			query +='( '+i[2]+' ) '	#add size of column
 			if i[4] !='':
@@ -118,5 +123,5 @@ def CreateTable(db, name, columns):
 			query +=', '
 		query = query[:-2]#remove last comma from list of columns
 	
-	query += ' ) ENGINE = INNODB'
+	query += ' )'
 	return query
