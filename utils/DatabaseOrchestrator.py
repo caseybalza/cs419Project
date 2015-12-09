@@ -191,6 +191,21 @@ class DatabaseOrchestrator:
                 self.logger.error(logging.exception("PostgresSQL - Delete database error"))
                 raise DatabaseCursorError("PostgresSQL - Delete database error")
 
+    def delete_table(self, results):
+	self.logger.info("Inside delete_table, databaseType: {}".format(self.databaseType))
+	if self.databaseType == "MySQL":
+		try:
+			self.cursor.execute("DROP TABLE " + results)
+		except:
+			self.logger.error(logging.exception("MySQL - Delete table error"))
+			
+	elif self.databaseType == "PostGresSQL":
+		try:
+			self.cursor.execute("DROP TABLE " + results)
+		except:
+			self.logger.error(logging.exception("PostgresSQL - Delete table error"))
+			raise DatabaseCursorError("PostgresSQL - Delete table error")
+
     def export_database(self, results):
         self.logger.info("Inside export_database, databaseType: {}".format(self.databaseType))
         if self.databaseType == "MySQL":
@@ -230,6 +245,25 @@ class DatabaseOrchestrator:
             except:
                 self.logger.error(logging.exception("PostgresSQL - Import database error"))
                 raise DatabaseCursorError("PostgresSQL - Import database error")
+
+    def create_table(self, query):
+	if self.databaseType == "MySQL":
+		try:
+			query = 'CREATE TABLE ' +self.database+'.'+query+' ENGINE = INNODB'
+			self.cursor.execute(query)
+		except Exception, e:
+			self.logger.error("Underlytin goperation exception: {}".format(e))
+			self.logger.error("Operation: () failed".format(query))
+			raise DatabaseCursorError("Cursor Operation failed")
+	elif self.databaseType == "PostgresSQL":
+		try:
+			query = 'CREATE TABLE ' + query
+			self.cursor.execute(query)
+		except Exception, e:
+			self.logger.error("Underlytin goperation exception: {}".format(e))
+			self.logger.error("Operation: () failed".format(query))
+			raise DatabaseCursorError("Cursor Operation failed")
+
     
     def perform_bulk_operations(self, operations):
         if self.databaseType == "MySQL":

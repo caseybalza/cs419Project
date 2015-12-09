@@ -50,6 +50,15 @@ def show_tables(dbs):
 	tables = DB_Orchestrator.show_tables()
 
 	dbs_menu['options'].append({'title': "CUSTOM QUERY", 'type': Dictionary.COMMAND, 'command': 'custom_query()' })
+	dbs_menu['options'].append({'title': "DROP TABLE", 'type': Dictionary.FORM, 'subtitle': "Please enter the name of the table you wish to delete.", 'location': '',
+		'fields':[
+			{'title': "Table Name: ", 'type': Dictionary.TEXT}
+		],
+		'options': [
+			{'title': "Back"},
+			{'title': "Drop", 'type': Dictionary.COMMAND, 'command': 'dropTable('}
+		]
+	})
 	for table in tables:
 		action = os.path.join('show_table_contents(\"{}\")'.format(table))
 		dbs_menu['options'].append({'title': table, 'type': Dictionary.COMMAND, 'command': action, 'location': table })
@@ -67,6 +76,16 @@ def custom_query():
 		return ncurses.draw_table("CustomQuery", queryResult, location, True)
 	return None
 #end custom query
+
+def dropTable(table):
+	logger.info("Inside dropTable")
+	
+	try: 
+		DB_Orchestrator.delete_table(table)
+	except:
+		logger.info("Error with delete_table")
+
+	return "DELETED"
 
 def show_db_options(dbs):
 	logger.info("Inside show_db_options")
@@ -216,19 +235,19 @@ def createDB(results):
 
 def createTable(results):
 	logger.info("Inside createTable")
-	queries = []
+#	queries = []
 
 	def getEntityStr(results):
 		return results
 	ncurses.resetscreen()
 
 	columns = eval(ncurses.processmenu(createEntity_form, ''))
-	query = CreateTable(DB_Orchestrator.database, results[0], columns)
-	queries.append(query)
-	logger.info("Attempting Query: "+queries[0])
+	query = CreateTable(DB_Orchestrator.database, results[0], columns, DB_Orchestrator.databaseType)
+#	queries.append(query)
+	logger.info("Attempting Query: "+query)
 	
 	try:
-		DB_Orchestrator.perform_bulk_operations(queries)
+		DB_Orchestrator.create_table(query)
 
 	except:
 		query = CREATE_TABLE_ERROR
@@ -308,8 +327,9 @@ def mainFunction(screen):
 					ncurses.resetscreen()
 					nextMenu = storeold
 					
-
-				location.append(nextMenu.get('location'))  #Add part of path to location
+				if (type(nextMenu) is not str):
+					location.append(nextMenu.get('location'))  #Add part of path to location
+				
 				if nextMenu == storeold:
 					back_list_stack.pop()
 					if size >= 2:

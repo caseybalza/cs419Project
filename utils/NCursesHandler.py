@@ -467,6 +467,8 @@ class NCursesHandler:
 
 	# This function calls showmenu and then acts on the selected item
 	def processmenu(self, menu, location, parent=None ):
+		if menu == "dropTable_form":
+			menu = dropTable_form
 		optioncount = len(menu['options'])
 		start = 0
 		if menu['type'] == Dictionary.MENU:
@@ -501,9 +503,9 @@ class NCursesHandler:
 					#curses.reset_prog_mode()   # reset to 'current' curses environment
 					#curses.curs_set(1)         # reset doesn't do this right
 					#curses.curs_set(0)
-				elif menu['options'][getin]['type'] == Dictionary.MENU:
+				elif menu['options'][getin]['type'] == Dictionary.MENU or menu['options'][getin]['type'] == Dictionary.FORM:
 					self.stdscr.clear() #clears previous screen on key press and updates display based on pos
-					self.processmenu(menu['options'][getin], menu) # display the submenu
+					return self.processmenu(menu['options'][getin], menu) # display the submenu
 					self.stdscr.clear() #clears previous screen on key press and updates display based on pos
 
 		else:
