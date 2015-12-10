@@ -21,9 +21,9 @@ from utils.QueryBuilder import CreateTable
 
 #Check if everything needed is installed and correct version, continue with program, else halt.
 
-stop = 0
-#stop = initiateProgram() #create instance of class initiateProgram
-#stop = stop.versionCheck() #call versionCheck on the instance.
+#stop = 0
+stop = initiateProgram() #create instance of class initiateProgram
+stop = stop.versionCheck() #call versionCheck on the instance.
 
 
 DB_Orchestrator = DatabaseOrchestrator()
@@ -327,8 +327,8 @@ def mainFunction(screen):
 					ncurses.resetscreen()
 					nextMenu = storeold
 					
-				if (type(nextMenu) is not str):
-					location.append(nextMenu.get('location'))  #Add part of path to location
+#				if (type(nextMenu) is not str):
+				location.append(nextMenu.get('location'))  #Add part of path to location
 				
 				if nextMenu == storeold:
 					back_list_stack.pop()
